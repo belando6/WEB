@@ -35,3 +35,6 @@ Proyecto web en `/var/www/html/WEB`, sincronizado con GitHub.
 - El token personal se almacena en ~/.git-credentials (solo lectura del owner).
 - Si se rota el token, editar ese archivo o re-ejecutar:
       echo "https://belando6:TOKEN_NUEVO@github.com" > ~/.git-credentials && chmod 600 ~/.git-credentials
+
+TAREAS PARA REALIZAR
+1 - Revisar repositorio ingles todos los documentos. Adaptarlo para crear una pagina web. Quiero que mantengas la idea y añados cosas que pueden ser mejorables. Usa el lenguaje que consideres y si hace falta añade base de datos. 

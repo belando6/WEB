@@ -1,5 +1,79 @@
 <!DOCTYPE html>
 <html lang="es">
-<head><meta charset="UTF-8"><title>WEB</title></head>
-<body><h1>Proyecto WEB</h1><p>Servido desde /var/www/html/WEB</p></body>
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>NEXUS · Portal</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a1a;--card:rgba(255,255,255,.06);--border:rgba(255,255,255,.12);
+--accent:#7c3aed;--accent2:#06b6d4;--text:#e2e8f0;--muted:#94a3b8}
+body{min-height:100vh;background:var(--bg);color:var(--text);
+font-family:'Segoe UI',system-ui,-apple-system,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;position:relative;overflow-x:hidden}
+body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%;
+background:radial-gradient(ellipse at 30% 50%,rgba(124,58,237,.12) 0%,transparent 60%),
+radial-gradient(ellipse at 70% 30%,rgba(6,182,212,.08) 0%,transparent 50%);
+animation:drift 20s ease-in-out infinite alternate;pointer-events:none;z-index:0}
+@keyframes drift{to{transform:translate(5%,3%) rotate(2deg)}}
+.grid-bg{position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:60px 60px;z-index:0;pointer-events:none}
+.header{text-align:center;margin-bottom:3rem;z-index:1;animation:fadeUp .8s ease both}
+.logo{font-size:.75rem;letter-spacing:6px;text-transform:uppercase;color:var(--accent2);margin-bottom:.75rem;font-weight:600}
+h1{font-size:clamp(2.4rem,6vw,3.6rem);font-weight:800;background:linear-gradient(135deg,#fff 30%,var(--accent) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.5rem}
+.subtitle{color:var(--muted);font-size:1.05rem;max-width:420px;margin:auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.5rem;width:100%;max-width:960px;z-index:1}
+.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:2rem 1.6rem;cursor:pointer;text-decoration:none;color:var(--text);display:flex;flex-direction:column;gap:.75rem;transition:all .35s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden;animation:fadeUp .8s ease both}
+.card:nth-child(1){animation-delay:.1s}.card:nth-child(2){animation-delay:.2s}.card:nth-child(3){animation-delay:.3s}.card:nth-child(4){animation-delay:.4s}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--accent2));opacity:0;transition:opacity .3s}
+.card:hover{transform:translateY(-6px) scale(1.02);border-color:rgba(124,58,237,.4);box-shadow:0 20px 60px -12px rgba(124,58,237,.25),0 0 0 1px rgba(124,58,237,.1)}
+.card:hover::before{opacity:1}
+.icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 8px 24px -6px rgba(124,58,237,.4)}
+.card h2{font-size:1.15rem;font-weight:700}
+.card p{color:var(--muted);font-size:.9rem;line-height:1.5}
+.tag{margin-top:auto;padding-top:.75rem;display:flex;align-items:center;gap:.4rem;font-size:.8rem;color:var(--accent2)}
+.arrow{transition:transform .3s}.card:hover .arrow{transform:translateX(4px)}
+.footer{margin-top:3.5rem;text-align:center;color:#475569;font-size:.8rem;z-index:1}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:520px){.grid{grid-template-columns:1fr}.card{padding:1.5rem 1.2rem}}
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+
+<header class="header">
+  <p class="logo">NEXUS · Portal v2.0</p>
+  <h1>Centro de Control</h1>
+  <p class="subtitle">Selecciona una sección para explorar. Cada módulo es independiente.</p>
+</header>
+
+<nav class="grid" aria-label="Menú principal">
+  <a href="sobre.html" class="card">
+    <div class="icon">🚀</div>
+    <h2>Sobre Nosotros</h2>
+    <p>Misión, equipo y filosofía detrás del proyecto.</p>
+    <span class="tag">Acerca <span class="arrow">→</span></span>
+  </a>
+
+  <a href="portfolio.html" class="card">
+    <div class="icon">🎨</div>
+    <h2>Portfolio</h2>
+    <p>Galería de proyectos, demos y experimentos técnicos.</p>
+    <span class="tag">Proyectos <span class="arrow">→</span></span>
+  </a>
+
+  <a href="blog.html" class="card">
+    <div class="icon">📝</div>
+    <h2>Blog / DevLog</h2>
+    <p>Notas de desarrollo, tutoriales y changelogs.</p>
+    <span class="tag">Artículos <span class="arrow">→</span></span>
+  </a>
+
+  <a href="contacto.html" class="card">
+    <div class="icon">✉️</div>
+    <h2>Contacto</h2>
+    <p>Canales de comunicación, soporte y feedback.</p>
+    <span class="tag">Hablemos <span class="arrow">→</span></span>
+  </a>
+</nav>
+
+<footer class="footer">© 2026 NEXUS — Servido desde /var/www/html/WEB</footer>
+</body>
 </html>
