@@ -29,5 +29,11 @@ Por favor, ejecuta los siguientes pasos iniciales:
    - Incorpora una base de datos si la naturaleza del contenido o la interacción del usuario lo requiere.
 
 3. Sincronización y Actualización:
-   - Añade el enlace a esta nueva página dentro de `index.html`.
-   - Haz commit de todos los cambios y súbelos al repositorio remoto de GitHub.
+   - Añade el enlace a esta nueva página dentro de `index.html` y realiza todos los cambios en el siguiente directorio:
+ 
+  /var/www/html/WEB/
+  ├── index.html          # sitio principal (actualizar enlace a la nueva página)
+  ├── blog.html, contacto.html, portfolio.html, sobre.html
+  └── ingles/             # ← sección nueva, añade todo lo que consideres necesario.      
+
+  - Haz commit de todos los cambios y súbelos al repositorio remoto de GitHub.
