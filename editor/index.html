@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>NEXUS · Editor Multimedia</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a1a;--card:rgba(255,255,255,.06);--border:rgba(255,255,255,.12);--accent:#7c3aed;--accent2:#06b6d4;--text:#e2e8f0;--muted:#94a3b8;--success:#10b981;--error:#ef4444}
+body{min-height:100vh;background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;padding:2rem 1.5rem;position:relative}
+body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(ellipse at 30% 50%,rgba(124,58,237,.1) 0%,transparent 60%),radial-gradient(ellipse at 70% 30%,rgba(6,182,212,.06) 0%,transparent 50%);animation:drift 20s ease-in-out infinite alternate;pointer-events:none;z-index:0}
+@keyframes drift{to{transform:translate(5%,3%) rotate(2deg)}}
+a{color:var(--accent2)}
+h1{font-size:clamp(1.8rem,4vw,2.6rem);font-weight:800;background:linear-gradient(135deg,#fff 30%,var(--accent) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.5rem}
+.subtitle{color:var(--muted);margin-bottom:2rem;font-size:.95rem}
+.back-link{display:inline-flex;align-items:center;gap:.4rem;color:var(--accent2);text-decoration:none;font-size:.85rem;margin-bottom:1.5rem;padding:.4rem .8rem;border-radius:8px;background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.2);transition:all .3s}
+.back-link:hover{background:rgba(6,182,212,.15)}
+
+/* Tabs */
+.tabs{display:flex;gap:.5rem;margin-bottom:1.5rem;flex-wrap:wrap}
+.tab-btn{padding:.7rem 1.4rem;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer;font-size:.9rem;font-weight:600;transition:all .3s;display:flex;align-items:center;gap:.5rem}
+.tab-btn:hover{border-color:rgba(124,58,237,.4);color:var(--text)}
+.tab-btn.active{background:linear-gradient(135deg,rgba(124,58,237,.2),rgba(6,182,212,.1));border-color:var(--accent);color:#fff}
+.panel{display:none;animation:fadeUp .4s ease both}
+.panel.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* Cards */
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.8rem;margin-bottom:1.5rem}
+.card h3{font-size:1.1rem;font-weight:700;margin-bottom:.8rem;display:flex;align-items:center;gap:.5rem}
+
+/* Dropzone */
+.dropzone{border:2px dashed rgba(124,58,237,.3);border-radius:12px;padding:2.5rem 1.5rem;text-align:center;color:var(--muted);transition:all .3s;cursor:pointer}
+.dropzone.dragover{border-color:var(--accent);background:rgba(124,58,237,.06)}
+.dropzone .icon{font-size:2.5rem;margin-bottom:.8rem}
+.dropzone p{font-size:.9rem}
+
+/* File list */
+.file-item{display:flex;align-items:center;gap:.8rem;padding:.7rem 1rem;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid var(--border);margin-bottom:.6rem}
+.file-item .ext{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;background:linear-gradient(135deg,var(--accent),var(--accent2))}
+.file-item .info{flex:1;min-width:0}
+.file-item .name{font-size:.9rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.file-item .meta{font-size:.75rem;color:var(--muted)}
+
+/* Controls */
+.controls{display:flex;gap:.8rem;margin-top:1rem;flex-wrap:wrap}
+.btn{padding:.7rem 1.4rem;border-radius:10px;border:none;font-weight:600;font-size:.9rem;cursor:pointer;transition:all .3s;display:inline-flex;align-items:center;gap:.5rem}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px -6px rgba(124,58,237,.4)}
+.btn-secondary{background:rgba(255,255,255,.08);color:var(--text);border:1px solid var(--border)}
+.btn-danger{background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.3)}
+
+/* Range slider */
+.range-wrap{display:flex;align-items:center;gap:.8rem;margin-top:1rem}
+input[type=range]{flex:1;height:6px;-webkit-appearance:none;background:rgba(255,255,255,.1);border-radius:3px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 0 8px rgba(124,58,237,.5)}
+.time-label{font-size:.85rem;color:var(--muted);min-width:60px;text-align:center;font-variant-numeric:tabular-nums}
+
+/* Progress */
+.progress-bar{height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden;margin-top:1rem;display:none}
+.progress-bar .fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;transition:width .3s;border-radius:2px}
+
+/* Result */
+.result-box{margin-top:1.5rem;padding:1.2rem;border-radius:12px;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);display:none}
+.result-box.show{display:block;animation:fadeUp .4s ease both}
+.result-box a{color:var(--success);font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:.4rem}
+
+/* Library table */
+.lib-table{width:100%;border-collapse:collapse;font-size:.85rem}
+.lib-table th{text-align:left;padding:.7rem .8rem;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border)}
+.lib-table td{padding:.7rem .8rem;border-bottom:1px solid rgba(255,255,255,.04)}
+.badge{display:inline-block;padding:.2rem .6rem;border-radius:6px;font-size:.75rem;font-weight:600}
+.badge-combined{background:rgba(124,58,237,.2);color:#c4b5fd}
+.badge-trimmed{background:rgba(6,182,212,.2);color:#67e8f9}
+.badge-no_audio{background:rgba(239,68,68,.2);color:#fca5a5}
+.badge-replaced{background:rgba(16,185,129,.2);color:#6ee7b7}
+
+/* Toast */
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);padding:.8rem 1.5rem;border-radius:10px;font-size:.9rem;z-index:999;animation:fadeUp .3s ease both}
+.toast-success{background:rgba(16,185,129,.9)}
+.toast-error{background:rgba(239,68,68,.9);color:#fff}
+
+/* Responsive */
+@media(max-width:600px){.tabs{flex-direction:column}.tab-btn{width:100%;justify-content:center}}
+</style>
+</head>
+<body>
+
+<a href="../index.html" class="back-link">← Volver al Portal</a>
+<h1>🎬 Editor Multimedia</h1>
+<p class="subtitle">Combina audio con video/imagen, edita duración, reemplaza pistas de audio y gestiona tu biblioteca.</p>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="combine">🔗 Combinar</button>
+  <button class="tab-btn" data-tab="trim">✂️ Recortar Audio</button>
+  <button class="tab-btn" data-tab="remove-audio">🔇 Quitar Audio</button>
+  <button class="tab-btn" data-tab="replace-audio">🔄 Reemplazar Audio</button>
+  <button class="tab-btn" data-tab="library">📚 Biblioteca</button>
+</div>
+
+<!-- COMBINE -->
+<div class="panel active" id="panel-combine">
+  <div class="card">
+    <h3>📹 Sube Video o Imagen</h3>
+    <div class="dropzone" id="dz-video"><div class="icon">🎞️</div><p>Arrastra un archivo de video (.mp4, .webm, .mkv) o imagen (.jpg, .png)</p></div>
+    <input type="file" id="inp-video" accept=".mp4,.webm,.mkv,.avi,.mov,.jpg,.jpeg,.png,.gif,.webp" hidden>
+  </div>
+  <div class="card">
+    <h3>🎵 Sube Audio</h3>
+    <div class="dropzone" id="dz-audio"><div class="icon">🎶</div><p>Arrastra un archivo de audio (.mp3, .wav, .ogg, .flac)</p></div>
+    <input type="file" id="inp-audio" accept=".mp3,.wav,.ogg,.flac,.aac" hidden>
+  </div>
+  <div class="card">
+    <h3>⚙️ Opciones</h3>
+    <p style="color:var(--muted);font-size:.85rem;margin-bottom:1rem">Si el archivo es una imagen, se generará un video de la duración del audio. Si es video, se usará la duración más corta.</p>
+    <div class="controls"><button class="btn btn-primary" id="btn-combine">🔗 Combinar y Generar</button></div>
+  </div>
+  <div class="progress-bar" id="prog-combine"><div class="fill"></div></div>
+  <div class="result-box" id="res-combine"></div>
+</div>
+
+<!-- TRIM -->
+<div class="panel" id="panel-trim">
+  <div class="card">
+    <h3>🎵 Sube Audio a Recortar</h3>
+    <div class="dropzone" id="dz-trim"><div class="icon">✂️</div><p>Arrastra un archivo de audio para recortar</p></div>
+    <input type="file" id="inp-trim" accept=".mp3,.wav,.ogg,.flac,.aac" hidden>
+  </div>
+  <div class="card">
+    <h3>⏱️ Duración</h3>
+    <p style="color:var(--muted);font-size:.85rem;margin-bottom:1rem">Selecciona el punto de inicio y fin del recorte.</p>
+    <div class="range-wrap"><span class="time-label" id="lbl-start">0:00</span><input type="range" id="rng-start" min="0" max="600" value="0" step="0.1"></div>
+    <div class="range-wrap"><span class="time-label" id="lbl-end">0:00</span><input type="range" id="rng-end" min="0" max="600" value="30" step="0.1"></div>
+    <p style="color:var(--muted);font-size:.8rem;margin-top:.5rem">Duración resultante: <strong id="lbl-duration">30s</strong></p>
+    <div class="controls"><button class="btn btn-primary" id="btn-trim">✂️ Recortar Audio</button></div>
+  </div>
+  <div class="progress-bar" id="prog-trim"><div class="fill"></div></div>
+  <div class="result-box" id="res-trim"></div>
+</div>
+
+<!-- REMOVE AUDIO -->
+<div class="panel" id="panel-remove-audio">
+  <div class="card">
+    <h3>📹 Sube Video (se quitará su audio)</h3>
+    <div class="dropzone" id="dz-rem"><div class="icon">🔇</div><p>Arrastra un archivo de video para eliminar la pista de audio</p></div>
+    <input type="file" id="inp-rem" accept=".mp4,.webm,.mkv,.avi,.mov" hidden>
+  </div>
+  <div class="card">
+    <h3>⚙️ Procesar</h3>
+    <p style="color:var(--muted);font-size:.85rem;margin-bottom:1rem">Se generará un video sin pista de audio (stream de vídeo intacto).</p>
+    <div class="controls"><button class="btn btn-primary" id="btn-remove">🔇 Quitar Audio</button></div>
+  </div>
+  <div class="progress-bar" id="prog-remove"><div class="fill"></div></div>
+  <div class="result-box" id="res-remove"></div>
+</div>
+
+<!-- REPLACE AUDIO -->
+<div class="panel" id="panel-replace-audio">
+  <div class="card">
+    <h3>📹 Video Original</h3>
+    <div class="dropzone" id="dz-rep-v"><div class="icon">🎞️</div><p>Arrastra el video al que se le reemplazará el audio</p></div>
+    <input type="file" id="inp-rep-v" accept=".mp4,.webm,.mkv,.avi,.mov" hidden>
+  </div>
+  <div class="card">
+    <h3>🎵 Nuevo Audio</h3>
+    <div class="dropzone" id="dz-rep-a"><div class="icon">🎶</div><p>Arrastra el nuevo archivo de audio a insertar</p></div>
+    <input type="file" id="inp-rep-a" accept=".mp3,.wav,.ogg,.flac,.aac" hidden>
+  </div>
+  <div class="card">
+    <h3>⚙️ Procesar</h3>
+    <p style="color:var(--muted);font-size:.85rem;margin-bottom:1rem">Se reemplazará la pista de audio del video con el nuevo track. Se usa la duración más corta.</p>
+    <div class="controls"><button class="btn btn-primary" id="btn-replace">🔄 Reemplazar Audio</button></div>
+  </div>
+  <div class="progress-bar" id="prog-replace"><div class="fill"></div></div>
+  <div class="result-box" id="res-replace"></div>
+</div>
+
+<!-- LIBRARY -->
+<div class="panel" id="panel-library">
+  <div class="card">
+    <h3>📚 Biblioteca de Resultados</h3>
+    <p style="color:var(--muted);font-size:.85rem;margin-bottom:1rem">Archivos generados por el editor, almacenados en SQLite.</p>
+    <table class="lib-table" id="lib-table"><thead><tr><th>Tipo</th><th>Archivo</th><th>Tamaño</th><th>Fecha</th><th></th></tr></thead><tbody id="lib-body"></tbody></table>
+  </div>
+</div>
+
+<script>
+const API='api.php';
+let uploadedFiles={};
+
+// Tab switching
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+    if(btn.dataset.tab==='library') loadLibrary();
+  });
+});
+
+// Dropzone helper
+function setupDrop(dzId,inpId,key){
+  const dz=document.getElementById(dzId),inp=document.getElementById(inpId);
+  dz.addEventListener('click',()=>inp.click());
+  dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('dragover')});
+  dz.addEventListener('dragleave',()=>dz.classList.remove('dragover'));
+  dz.addEventListener('drop',e=>{
+    e.preventDefault();dz.classList.remove('dragover');
+    if(e.dataTransfer.files.length){inp.files=e.dataTransfer.files;handleFile(key);}
+  });
+  inp.addEventListener('change',()=>handleFile(key));
+}
+
+function handleFile(key){
+  const inp=document.getElementById(inpIdMap[key]);
+  if(!inp||!inp.files[0])return;
+  uploadedFiles[key]=inp.files[0];
+  const dz=document.getElementById(dzIdMap[key]);
+  dz.innerHTML<div class="icon">✅</div><p style="color:var(--success);font-weight:600">${inp.files[0].name} (${(inp.files[0].size/1024).toFixed(1)} KB)</p;
+}
+
+const inpIdMap={video:'inp-video',audio:'inp-audio',trim:'inp-trim',rem:'inp-rem','rep-v':'inp-rep-v','rep-a':'inp-rep-a'};
+const dzIdMap={video:'dz-video',audio:'dz-audio',trim:'dz-trim',rem:'dz-rem','rep-v':'dz-rep-v','rep-a':'dz-rep-a'};
+
+setupDrop('dz-video','inp-video','video');
+setupDrop('dz-audio','inp-audio','audio');
+setupDrop('dz-trim','inp-trim','trim');
+setupDrop('dz-rem','inp-rem','rem');
+setupDrop('dz-rep-v','inp-rep-v','rep-v');
+setupDrop('dz-rep-a','inp-rep-a','rep-a');
+
+// Range sync for trim
+const rngStart=document.getElementById('rng-start'),rngEnd=document.getElementById('rng-end');
+function updateTrimLabels(){
+  const s=parseFloat(rngStart.value),e=parseFloat(rngEnd.value);
+  document.getElementById('lbl-start').textContent=formatTime(s);
+  document.getElementById('lbl-end').textContent=formatTime(e);
+  document.getElementById('lbl-duration').textContent=(e-s).toFixed(1)+'s';
+}
+rngStart.addEventListener('input',updateTrimLabels);
+rngEnd.addEventListener('input',updateTrimLabels);
+updateTrimLabels();
+
+function formatTime(s){const m=Math.floor(s/60),sec=s%60;return `${m}:${sec.toFixed(0).padStart(2,'0')}`}
+
+// Upload helper
+async function uploadFile(file,key){
+  const fd=new FormData();fd.append('action','upload');fd.append(key,file);
+  const r=await fetch(API,fd);const j=await r.json();
+  if(j.ok&&j.files[0])return j.files[0].name;
+  throw new Error(j.error||'Upload falló');
+}
+
+// Progress simulation
+function showProgress(id){document.getElementById(id).style.display='block';const f=document.querySelector#${id} .fill);let p=0;const iv=setInterval(()=>{p=Math.min(p+Math.random()*15,95);f.style.width=p+'%'},400);return()=>{clearInterval(iv);f.style.width='100%'}}
+
+// Toast
+function toast(msg,type){
+  const t=document.createElement('div');t.classNametoast toast-${type;t.textContent=msg;document.body.appendChild(t);
+  setTimeout(()=>t.remove(),3500);
+}
+
+// COMBINE
+document.getElementById('btn-combine').addEventListener('click',async()=>{
+  if(!uploadedFiles.video||!uploadedFiles.audio){toast('Necesitas subir video e imagen Y audio','error');return;}
+  const hide=showProgress('prog-combine');
+  try{
+    const vName=await uploadFile(uploadedFiles.video,'video');
+    const aName=await uploadFile(uploadedFiles.audio,'audio');
+    const fd=new FormData();fd.append('action','combine');fd.append('video',vName);fd.append('audio',aName);
+    const r=await fetch(API,fd);const j=await r.json();hide();
+    if(j.ok){document.getElementById('res-combine').className='result-box show';document.getElementById('res-combine').innerHTML<p style="color:var(--success);font-weight:600">✅ ¡Combinado con éxito!</p><a href="${j.url}" download>⬇️ Descargar ${j.file}</a;toast('Archivo combinado correctamente','success');}
+    else{document.getElementById('res-combine').className='result-box show';document.getElementById('res-combine').innerHTML<p style="color:var(--error)">❌ Error: ${j.error||'desconocido'}</p;toast(j.error||'Error al combinar','error');}
+  }catch(e){hide();toast(e.message,'error')}
+});
+
+// TRIM
+document.getElementById('btn-trim').addEventListener('click',async()=>{
+  if(!uploadedFiles.trim){toast('Sube un archivo de audio primero','error');return;}
+  const hide=showProgress('prog-trim');
+  try{
+    const aName=await uploadFile(uploadedFiles.trim,'audio');
+    const fd=new FormData();fd.append('action','trim_audio');fd.append('audio',aName);fd.append('start',rngStart.value);fd.append('end',rngEnd.value);
+    const r=await fetch(API,fd);const j=await r.json();hide();
+    if(j.ok){document.getElementById('res-trim').className='result-box show';document.getElementById('res-trim').innerHTML<p style="color:var(--success);font-weight:600">✅ ¡Recortado!</p><a href="${j.url}" download>⬇️ Descargar ${j.file}</a;toast('Audio recortado','success');}
+    else{document.getElementById('res-trim').className='result-box show';document.getElementById('res-trim').innerHTML<p style="color:var(--error)">❌ Error</p;toast(j.error||'Error','error');}
+  }catch(e){hide();toast(e.message,'error')}
+});
+
+// REMOVE AUDIO
+document.getElementById('btn-remove').addEventListener('click',async()=>{
+  if(!uploadedFiles.rem){toast('Sube un video primero','error');return;}
+  const hide=showProgress('prog-remove');
+  try{
+    const vName=await uploadFile(uploadedFiles.rem,'video');
+    const fd=new FormData();fd.append('action','remove_audio');fd.append('video',vName);
+    const r=await fetch(API,fd);const j=await r.json();hide();
+    if(j.ok){document.getElementById('res-remove').className='result-box show';document.getElementById('res-remove').innerHTML<p style="color:var(--success);font-weight:600">✅ Audio eliminado</p><a href="${j.url}" download>⬇️ Descargar ${j.file}</a;toast('Audio quitado','success');}
+    else{document.getElementById('res-remove').className='result-box show';document.getElementById('res-remove').innerHTML<p style="color:var(--error)">❌ Error</p;toast(j.error||'Error','error');}
+  }catch(e){hide();toast(e.message,'error')}
+});
+
+// REPLACE AUDIO
+document.getElementById('btn-replace').addEventListener('click',async()=>{
+  if(!uploadedFiles['rep-v']||!uploadedFiles['rep-a']){toast('Necesitas video y nuevo audio','error');return;}
+  const hide=showProgress('prog-replace');
+  try{
+    const vName=await uploadFile(uploadedFiles['rep-v'],'video');
+    const aName=await uploadFile(uploadedFiles['rep-a'],'audio');
+    const fd=new FormData();fd.append('action','replace_audio');fd.append('video',vName);fd.append('audio',aName);
+    const r=await fetch(API,fd);const j=await r.json();hide();
+    if(j.ok){document.getElementById('res-replace').className='result-box show';document.getElementById('res-replace').innerHTML<p style="color:var(--success);font-weight:600">✅ Audio reemplazado</p><a href="${j.url}" download>⬇️ Descargar ${j.file}</a;toast('Audio reemplazado','success');}
+    else{document.getElementById('res-replace').className='result-box show';document.getElementById('res-replace').innerHTML<p style="color:var(--error)">❌ Error</p;toast(j.error||'Error','error');}
+  }catch(e){hide();toast(e.message,'error')}
+});
+
+// LIBRARY
+async function loadLibrary(){
+  const r=await fetch(API+'?action=library');const j=await r.json();
+  if(!j.ok)return;
+  const tbody=document.getElementById('lib-body');
+  if(!j.items.length){tbody.innerHTML='<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:1.5rem">Sin archivos generados aún</td></tr>';return;}
+  tbody.innerHTML=j.items.map(it=><tr>
+    <td><span class="badge badge-${it.type}">${it.type}</span></td>
+    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${it.filename}</td>
+    <td>${(it.size_bytes/1024).toFixed(1)} KB</td>
+    <td>${it.created_at}</td>
+    <td><a href="output/${it.filename}" download style="font-weight:600">⬇️</a></td>
+  </tr).join('');
+}
+
+// Initial library load if tab is active
+if(window.location.hash==='#library')document.querySelector('[data-tab=library]').click();
+</script>
+</body>
+</html>
