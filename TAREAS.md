@@ -21,7 +21,7 @@ Por favor, ejecuta los siguientes pasos iniciales:
 
 1. Inspección de Repositorios y Documentación:
    - Examina los repositorios disponibles en la cuenta belando.v2@gmail.com.
-   - Lee todos los archivos de documentación o código que estén en el repositorio ingles. Muy importante solo lo que esta en el repositorio ingles.
+   - Lee todos los archivos de documentación o código que estén en el repositorio counterkcal. Muy importante solo lo que esta en el repositorio counterkcal.
    
 2. Desarrollo de la Página Web:
    - Traduce, adapta y sintetiza el contenido de esos archivos para crear una nueva página web funcional dentro del proyecto.
@@ -34,6 +34,6 @@ Por favor, ejecuta los siguientes pasos iniciales:
   /var/www/html/WEB/
   ├── index.html          # sitio principal (actualizar enlace a la nueva página)
   ├── blog.html, contacto.html, portfolio.html, sobre.html
-  └── ingles/             # ← sección nueva, añade todo lo que consideres necesario.      
+  └── counterkcal/             # ← sección nueva, añade todo lo que consideres necesario.      
 
   - Haz commit de todos los cambios y súbelos al repositorio remoto de GitHub.
