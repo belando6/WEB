@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inglés - Panel de Estudio</title>
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--accent:#3b82f6;--green:#22c55e;--red:#ef4444;--yellow:#eab308;--text:#f1f5f9;--muted:#94a3b8}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.container{max-width:1200px;margin:0 auto;padding:20px}
+h1{text-align:center;font-size:2rem;margin-bottom:8px;color:var(--accent)}
+.subtitle{text-align:center;color:var(--muted);margin-bottom:24px}
+.nivel-select{display:flex;justify-content:center;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+.nivel-btn{padding:10px 24px;border:2px solid var(--accent);border-radius:8px;background:transparent;color:var(--text);cursor:pointer;font-size:1rem;transition:.2s}
+.nivel-btn.active,.nivel-btn:hover{background:var(--accent);color:#fff}
+.menu-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:32px}
+.menu-card{background:var(--card);border-radius:12px;padding:24px;text-align:center;cursor:pointer;border:2px solid transparent;transition:.2s;font-size:1.1rem}
+.menu-card:hover,.menu-card.active{border-color:var(--accent);transform:translateY(-2px)}
+.menu-card .icon{font-size:2rem;margin-bottom:8px}
+.section{display:none}.section.active{display:block}
+.card{background:var(--card);border-radius:12px;padding:24px;margin-bottom:16px}
+.card h3{color:var(--accent);margin-bottom:16px;font-size:1.2rem}
+.btn{padding:10px 20px;border:none;border-radius:8px;cursor:pointer;font-size:.95rem;transition:.2s;margin:4px}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{opacity:.85}
+.btn-danger{background:var(--red);color:#fff}.btn-danger:hover{opacity:.85}
+.btn-success{background:var(--green);color:#fff}.btn-success:hover{opacity:.85}
+.btn-warn{background:var(--yellow);color:#000}.btn-warn:hover{opacity:.85}
+input,select,textarea{width:100%;padding:10px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:var(--text);margin-bottom:10px;font-size:.95rem}
+label{display:block;margin-bottom:4px;color:var(--muted);font-size:.9rem}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th,td{padding:8px 12px;text-align:left;border-bottom:1px solid #334155}
+th{color:var(--accent)}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.75rem}
+.badge-pend{background:#fbbf24;color:#000}.badge-apr{background:var(--green);color:#000}.badge-rep{background:var(--red);color:#fff}
+.quiz-box{text-align:center;padding:32px}
+.quiz-word{font-size:1.8rem;margin-bottom:16px;color:var(--accent)}
+.result-msg{padding:12px;border-radius:8px;text-align:center;font-weight:bold;margin-top:12px}
+.result-ok{background:#052e16;color:var(--green)}.result-err{background:#450a0a;color:var(--red)}
+.toast{position:fixed;bottom:20px;right:20px;padding:12px 20px;border-radius:8px;background:var(--card);color:var(--text);box-shadow:0 4px 12px rgba(0,0,0,.5);z-index:999;display:none}
+.toast.show{display:block;animation:fadeIn .3s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.back-btn{margin-bottom:16px;display:inline-block}
+.part-header{color:var(--accent);font-weight:bold;margin:12px 0 8px;border-bottom:1px solid #334155;padding-bottom:4px}
+.pregunta-row{display:flex;align-items:center;gap:8px;margin:6px 0}
+.pregunta-num{width:36px;text-align:right;color:var(--muted);font-size:.9rem}
+@media(max-width:768px){.container{padding:12px}.menu-grid{grid-template-columns:repeat(2,1fr)}.form-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>&#x1F3F7;&#xFE0F; English Learning Panel</h1>
+<p class="subtitle">Vocabulario &middot; Listening &middot; Reading &middot; Speaking &middot; Writing</p>
+
+<div class="nivel-select" id="nivelSelect">
+<button class="nivel-btn" data-nivel="B1">B1</button>
+<button class="nivel-btn" data-nivel="B2">B2</button>
+<button class="nivel-btn" data-nivel="C1">C1</button>
+<button class="nivel-btn" data-nivel="C2">C2</button>
+</div>
+
+<div class="menu-grid" id="mainMenu">
+<div class="menu-card" data-section="vocab"><div class="icon">&#x1F4DA;</div>Vocabulary</div>
+<div class="menu-card" data-section="listening"><div class="icon">&#x1F3A7;</div>Listening</div>
+<div class="menu-card" data-section="reading"><div class="icon">&#x1F4D6;</div>Reading <small>(dev)</small></div>
+<div class="menu-card" data-section="speaking"><div class="icon">&#x1F5E3;&#xFE0F;</div>Speaking <small>(dev)</small></div>
+<div class="menu-card" data-section="writing"><div class="icon">&#x270D;&#xFE0F;</div>Writing <small>(dev)</small></div>
+</div>
+
+<!-- VOCABULARIO -->
+<div id="sec-vocab" class="section">
+<button class="btn btn-primary back-btn" onclick="showMenu()">&larr; Volver al men&#x00fa;</button>
+<h3 style="color:var(--accent);margin-bottom:16px">&#x1F4DA; Vocabulary - <span id="vocabNivel"></span></h3>
+<div class="card">
+<button class="btn btn-primary" onclick="tareaDiaria()">&#x1F3AF; Tarea Diaria</button>
+<button class="btn btn-success" onclick="anadirPalabra()">&#x2795; A&#x00f1;adir Palabra</button>
+<button class="btn btn-warn" onclick="revisionDiaria()">&#x1F4C5; Revisi&#x00f3;n Diaria</button>
+<button class="btn btn-primary" onclick="revisionGeneral()">&#x1F504; Revisi&#x00f3;n General</button>
+<button class="btn btn-success" onclick="preguntaAleatoria()">&#x2753; Pregunta Aleatoria</button>
+<button class="btn btn-danger" onclick="listarPalabras()">&#x1F4CB; Lista de Palabras</button>
+</div>
+<button class="btn btn-warn" onclick="toggleHelp('help-vocab')">&#x2139; C&#xf3;mo funciona</button>
+<div id="help-vocab" style="display:none;margin-bottom:16px">
+  <div class="card" style="border-left:4px solid var(--accent)">
+    <h3>&#x2139; Gu&#xed;a de Vocabulario</h3>
+    <ul style="color:var(--text);line-height:1.7;padding-left:20px">
+      <li><b>Tarea Diaria:</b> objetivo d&#xed;a a d&#xed;a &#x2192; 5 palabras + 3 phrasal verbs + 1 idioma. Si no lo cumples, te avisa cu&#xe1;ntos faltan.</li>
+      <li><b>A&#xf1;adir Palabra:</b> formulario con tipo (palabra / phrasal / idioma), traducci&#xf3;n m&#xfa;ltiple separada por comas y ejemplo opcional.</li>
+      <li><b>Revisi&#xf3;n Diaria:</b> quiz solo de lo a&#xf1;adido ayer que no est&#xe9; marcado como aprendido.</li>
+      <li><b>Revisi&#xf3;n General:</b> quiz de todo lo pendiente o en estado "repetir".</li>
+      <li><b>Pregunta Aleatoria:</b> una pregunta al azar de toda la lista del nivel.</li>
+      <li><b>Lista de Palabras:</b> tabla completa con estado (pendiente / aprendido / repetir) y bot&#xf3;n eliminar.</li>
+    </ul>
+  </div>
+</div>
+<div id="vocabArea"></div>
+</div>
+
+<!-- LISTENING -->
+<div id="sec-listening" class="section">
+<button class="btn btn-primary back-btn" onclick="showMenu()">&larr; Volver al men&#x00fa;</button>
+<h3 style="color:var(--accent);margin-bottom:16px">&#x1F3A7; Listening - <span id="listenNivel"></span></h3>
+<div class="card">
+<button class="btn btn-primary" onclick="formularioListening()">&#x2795; A&#x00f1;adir Audio/PDF</button>
+<button class="btn btn-success" onclick="listarListening()">&#x1F4C2; Ver/Modificar Audios</button>
+<button class="btn btn-warn" onclick="practicarListening()">&#x1F3AF; Practicar Listening</button>
+</div>
+<button class="btn btn-warn" onclick="toggleHelp('help-listen')">&#x2139; C&#xf3;mo funciona</button>
+<div id="help-listen" style="display:none;margin-bottom:16px">
+  <div class="card" style="border-left:4px solid var(--accent)">
+    <h3>&#x2139; Gu&#xed;a de Listening</h3>
+    <ul style="color:var(--text);line-height:1.7;padding-left:20px">
+      <li><b>A&#xf1;adir Audio/PDF:</b> canal YouTube + t&#xed;tulo + URL (+ PDF opcional). Al guardar, te abre el formulario de preguntas por partes seg&#xfa;n tu nivel (B1: 7+6+6+6, B2: 7+7+7+7, C1/C2: 8/9).</li>
+      <li><b>Ver/Mostrar Audios:</b> lista con t&#xed;tulo, canal y contador de fallos. Botones para ver preguntas o eliminar.</li>
+      <li><b>Practicar Listening:</b> eliges un audio, respondes cada pregunta en su campo y pulsas "Corregir". Te dice cu&#xe1;ntos fallos y d&#xf3;nde est&#xe1;n. El contador de fallos se actualiza autom&#xe1;ticamente.</li>
+    </ul>
+  </div>
+</div>
+<div id="listenArea"></div>
+</div>
+
+<!-- READING -->
+<div id="sec-reading" class="section">
+<button class="btn btn-primary back-btn" onclick="showMenu()">&larr; Volver al men&#x00fa;</button>
+<h3 style="color:var(--accent);margin-bottom:16px">&#x1F4D6; Reading - <span id="readNivel"></span></h3>
+<div class="card"><p style="color:var(--muted)">Section under development...</p></div>
+</div>
+
+<!-- SPEAKING -->
+<div id="sec-speaking" class="section">
+<button class="btn btn-primary back-btn" onclick="showMenu()">&larr; Volver al men&#x00fa;</button>
+<h3 style="color:var(--accent);margin-bottom:16px">&#x1F5E3;&#xFE0F; Speaking - <span id="speakNivel"></span></h3>
+<div class="card"><p style="color:var(--muted)">Section under development...</p></div>
+</div>
+
+<!-- WRITING -->
+<div id="sec-writing" class="section">
+<button class="btn btn-primary back-btn" onclick="showMenu()">&larr; Volver al men&#x00fa;</button>
+<h3 style="color:var(--accent);margin-bottom:16px">&#x270D;&#xFE0F; Writing - <span id="writeNivel"></span></h3>
+<div class="card"><p style="color:var(--muted)">Section under development...</p></div>
+</div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const API='api.php';
+let nivel=localStorage.getItem('ingles_nivel')||'B1';
+const EXAM={B1:{1:7,2:6,3:6,4:6},B2:{1:7,2:7,3:7,4:7},C1:{1:8,2:8,3:8,4:8},C2:{1:9,2:9,3:9,4:9}};
+
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500)}
+async function api(action,data,params={}){
+  let url=API+'?action='+action;
+  if(params.nivel)url+='&nivel='+params.nivel;
+  if(params.id!==undefined)url+='&id='+params.id;
+  if(params.listening_id)url+='&listening_id='+params.listening_id;
+  if(params.fallos!==undefined)url+='&fallos='+params.fallos;
+  const opts={method:data?'POST':'GET',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)};
+  if(!data){delete opts.body;opts.method='GET'}
+  const r=await fetch(url,opts);return r.json();
+}
+
+// NIVEL SELECTOR
+document.querySelectorAll('.nivel-btn').forEach(b=>{
+  b.onclick=()=>{
+    nivel=b.dataset.nivel;localStorage.setItem('ingles_nivel',nivel);
+    document.querySelectorAll('.nivel-btn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    ['vocab','listen','read','speak','write'].forEach(s=>{
+      const el=document.getElementById(s+'Nivel');if(el)el.textContent=nivel;
+    });
+    // Volver al menú principal para reflejar el cambio de nivel
+    showMenu();
+  };
+});
+
+// MENU
+function showMenu(){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('mainMenu').style.display='grid';
+}
+document.querySelectorAll('.menu-card').forEach(c=>{
+  c.onclick=()=>{
+    const sec=c.dataset.section;
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    document.getElementById('sec-'+sec).classList.add('active');
+    document.getElementById('mainMenu').style.display='none';
+    if(sec==='vocab')listarPalabras();
+    if(sec==='listening')listarListening();
+  };
+});
+
+// ===== VOCABULARIO =====
+async function tareaDiaria(){
+  const hoy=new Date().toISOString().slice(0,10);
+  let r=await api('vocab_list',null,{nivel:nivel});
+  if(!r.length){toast('No hay palabras a\u00fan. A\u00f1ade primero.');return}
+  const conteo={palabra:0,phrasal:0,idioma:0};
+  r.forEach(p=>{if(conteo[p.tipo]!==undefined)conteo[p.tipo]++});
+  const objetivos={palabra:5,phrasal:3,idioma:1};
+  for(const[tipo,meta]of Object.entries(objetivos)){
+    if(conteo[tipo]<meta){
+      const faltan=meta-conteo[tipo];
+      toast('Debes a\u00f1adir '+faltan+' '+tipo+'(s) hoy');
+      mostrarFormulario(tipo,faltan);return;
+    }
+  }
+  toast('\u2705 \u00a1Tarea diaria completada!');
+}
+
+function anadirPalabra(){mostrarFormulario(null,0)}
+
+function mostrarFormulario(tipoFijada,faltas){
+  const area=document.getElementById('vocabArea');
+  const tipos=['palabra','phrasal','idioma'];
+  let opts=tipos.map(t=>'<option value="'+t+'"'+(t===tipoFijada?' selected':'')+'>'+t+'</option>').join('');
+  let extra=faltas?'<p style="color:var(--accent);margin-bottom:12px">Debes a\u00f1adir '+faltas+' '+(tipoFijada||'palabra')+'(s) hoy</p>':'';
+  area.innerHTML='<div class="card"><h3>'+(tipoFijada?'Tarea Diaria - '+tipoFijada:'A\u00f1adir Palabra')+'</h3>'+extra+
+    '<div class="form-grid">'+
+    '<div><label>Tipo</label><select id="vTipo">'+opts+'</select></div>'+
+    '<div><label>Palabra en ingl\u00e9s</label><input id="vPalabra"></div>'+
+    '<div><label>Traducci\u00f3n (varias separadas por comas)</label><input id="vTraduccion"></div>'+
+    '<div><label>Ejemplo de uso</label><input id="vEjemplo" placeholder="(opcional)"></div>'+
+    '</div>'+
+    '<button class="btn btn-primary" onclick="guardarPalabra()">&#x1F4BE; Guardar</button></div>';
+}
+
+async function guardarPalabra(){
+  const palabra=document.getElementById('vPalabra').value.trim();
+  const traduccion=document.getElementById('vTraduccion').value.trim();
+  const ejemplo=document.getElementById('vEjemplo').value.trim();
+  const tipo=document.getElementById('vTipo').value;
+  if(!palabra||!traduccion){toast('\u26a0 Rellena palabra y traducci\u00f3n');return}
+  const r=await api('vocab_add',{palabra:palabra,traduccion:traduccion,ejemplo:ejemplo,tipo:tipo,nivel:nivel});
+  toast(r.ok?'\u2705 Palabra a\u00f1adida':'\u274c La palabra ya existe');
+  if(r.ok)listarPalabras();
+}
+
+async function revisionDiaria(){
+  let r=await api('vocab_list',null,{nivel:nivel});
+  const ayer=new Date(Date.now()-86400000).toISOString().slice(0,10);
+  let lista=r.filter(p=>p.fecha===ayer&&p.estado!=='aprendido');
+  if(!lista.length){toast('No hay palabras para revisi\u00f3n diaria');return}
+  iniciarQuiz(lista,'Daily Review');
+}
+
+async function revisionGeneral(){
+  let r=await api('vocab_list',null,{nivel:nivel});
+  let lista=r.filter(p=>p.estado==='pendiente'||p.estado==='repetir');
+  if(!lista.length){toast('No hay palabras pendientes de revisi\u00f3n');return}
+  iniciarQuiz(lista,'General Review');
+}
+
+async function preguntaAleatoria(){
+  let r=await api('vocab_list',null,{nivel:nivel});
+  if(!r.length){toast('No hay palabras en la lista');return}
+  iniciarQuiz(r,'Random Question');
+}
+
+function iniciarQuiz(lista,titulo){
+  const area=document.getElementById('vocabArea');
+  let idx=0;
+  function mostrar(){
+    if(idx>=lista.length){
+      area.innerHTML='<div class="card"><h3>\u2705 '+titulo+' completada</h3><button class="btn btn-primary" onclick="listarPalabras()">Ver lista</button></div>';
+      return;
+    }
+    const p=lista[idx];
+    area.innerHTML='<div class="card quiz-box">'+
+      '<p style="color:var(--muted);margin-bottom:8px">'+titulo+' ('+(idx+1)+'/'+lista.length+')</p>'+
+      '<div class="quiz-word">Traduce: '+p.palabra+'</div>'+
+      '<input id="qResp" placeholder="Tu respuesta..." onkeydown="if(event.key===\'Enter\')checkQuiz()">'+
+      '<button class="btn btn-primary" onclick="checkQuiz()">Comprobar</button></div>';
+  }
+  window.checkQuiz=async function(){
+    const resp=document.getElementById('qResp').value.trim().toLowerCase();
+    const correctas=lista[idx].traduccion.split(',').map(t=>t.trim().toLowerCase());
+    if(correctas.includes(resp)){
+      await api('vocab_estado',{id:lista[idx].id,estado:'aprendido'});
+      area.innerHTML='<div class="card"><div class="result-msg result-ok">\u2705 Correct!</div><br><button class="btn btn-primary" onclick="nextQuiz()">Siguiente</button></div>';
+    }else{
+      await api('vocab_estado',{id:lista[idx].id,estado:'repetir'});
+      area.innerHTML='<div class="card"><div class="result-msg result-err">\u274c Incorrect<br>Correcto: '+correctas.join(', ')+'</div><br><button class="btn btn-primary" onclick="nextQuiz()">Siguiente</button></div>';
+    }
+  };
+  window.nextQuiz=function(){idx++;mostrar()};
+  mostrar();
+}
+
+async function listarPalabras(){
+  const r=await api('vocab_list',null,{nivel:nivel});
+  const area=document.getElementById('vocabArea');
+  if(!r.length){area.innerHTML='<div class="card"><p style="color:var(--muted)">No hay palabras.</p></div>';return}
+  let html='<div class="card"><h3>\u{1F4CB} Word List ('+r.length+')</h3><table><tr><th>Palabra</th><th>Traducci\u00f3n</th><th>Tipo</th><th>Estado</th><th>Ejemplo</th><th></th></tr>';
+  r.forEach(p=>{
+    const badge=p.estado==='aprendido'?'badge-apr':p.estado==='repetir'?'badge-rep':'badge-pend';
+    html+='<tr><td>'+p.palabra+'</td><td>'+p.traduccion+'</td><td>'+p.tipo+'</td>'+
+      '<td><span class="badge '+badge+'">'+p.estado+'</span></td>'+
+      '<td style="color:var(--muted);font-size:.85rem">'+(p.ejemplo||'')+'</td>'+
+      '<td><button class="btn btn-danger" onclick="eliminarPalabra('+p.id+')">\u2715</button></td></tr>';
+  });
+  html+='</table></div>';
+  area.innerHTML=html;
+}
+
+async function eliminarPalabra(id){
+  if(!confirm('\u00bfEliminar esta palabra?'))return;
+  await api('vocab_delete',null,{id:id});
+  toast('\u{1F5D1}\ufe0f Palabra eliminada');listarPalabras();
+}
+
+// ===== LISTENING =====
+function formularioListening(){
+  const area=document.getElementById('listenArea');
+  area.innerHTML='<div class="card"><h3>\u2795 A\u00f1adir Audio/PDF</h3>'+
+    '<div class="form-grid">'+
+    '<div><label>Canal de YouTube</label><input id="lCanal"></div>'+
+    '<div><label>T\u00edtulo del Audio</label><input id="lTitulo"></div>'+
+    '</div>'+
+    '<label>URL de YouTube</label><input id="lUrl" placeholder="https://youtube.com/...">'+
+    '<label>Ruta PDF (opcional)</label><input id="lPdf" placeholder="(opcional)">'+
+    '<button class="btn btn-primary" onclick="guardarListening()">&#x1F4BE; Guardar y A\u00f1adir Preguntas</button></div>';
+}
+
+async function guardarListening(){
+  const canal=document.getElementById('lCanal').value.trim();
+  const titulo=document.getElementById('lTitulo').value.trim();
+  const url=document.getElementById('lUrl').value.trim();
+  const pdf=document.getElementById('lPdf').value.trim();
+  if(!canal||!titulo||!url){toast('\u26a0 Rellena canal, t\u00edtulo y URL');return}
+  const r=await api('listening_add',{nivel:nivel,canal:canal,titulo:titulo,url:url,pdf:pdf});
+  toast(r.ok?'\u2705 Audio a\u00f1adido. Ahora a\u00f1ade las preguntas':'Error');
+  if(r.ok)gestorPreguntas(r.id);
+}
+
+function gestorPreguntas(lid){
+  const partes=EXAM[nivel];
+  let html='<div class="card"><h3>\u{1F4DD} Preguntas - Audio</h3>';
+  for(const[parte,num]of Object.entries(partes)){
+    html+='<div class="part-header">Parte '+parte+' (preguntas: '+num+')</div>';
+    for(let n=1;n<=num;n++){
+      html+='<div class="pregunta-row"><span class="pregunta-num">'+parte+'.'+n+'</span><input id="pq_'+parte+'_'+n+'" placeholder="Pregunta '+n+'"></div>';
+    }
+  }
+  html+='</div><button class="btn btn-primary" onclick="guardarPreguntas('+lid+')">&#x1F4BE; Guardar todas las preguntas</button>'+
+    '<br><button class="btn btn-danger" onclick="listarListening()">Cancelar</button></div>';
+  document.getElementById('listenArea').innerHTML=html;
+}
+
+async function guardarPreguntas(lid){
+  const partes=EXAM[nivel];let preguntas=[];
+  for(const[parte,num]of Object.entries(partes)){
+    for(let n=1;n<=num;n++){
+      const el=document.getElementById('pq_'+parte+'_'+n);
+      if(el){const v=el.value.trim();if(v)preguntas.push({parte:+parte,num:n,respuesta:v})}
+    }
+  }
+  await api('preguntas_save',{listening_id:lid,preguntas:preguntas});
+  toast('\u2705 Preguntas guardadas');listarListening();
+}
+
+async function listarListening(){
+  const r=await api('listening_list',null,{nivel:nivel});
+  const area=document.getElementById('listenArea');
+  if(!r.length){area.innerHTML='<div class="card"><p style="color:var(--muted)">No hay audios guardados.</p></div>';return}
+  let html='<div class="card"><h3>\u{1F4C2} Listening Audios - '+nivel+'</h3><table><tr><th>T\u00edtulo</th><th>Canal</th><th>Fallos</th><th>Acciones</th></tr>';
+  r.forEach(a=>{
+    html+='<tr><td>'+a.titulo+'</td><td>'+a.canal+'</td><td>'+a.fallos+'</td>'+
+      '<td><button class="btn btn-primary" onclick="verPreguntas('+a.id+',\''+a.titulo.replace(/'/g,"\\'")+'\')">&#x1F4DD; Preguntas</button> '+
+      '<button class="btn btn-danger" onclick="eliminarListening('+a.id+')">\u2715</button></td></tr>';
+  });
+  html+='</table></div>';
+  area.innerHTML=html;
+}
+
+async function verPreguntas(lid,titulo){
+  const r=await api('preguntas_list',null,{listening_id:lid});
+  let html='<div class="card"><h3>\u{1F4DD} Preguntas - '+titulo+'</h3>';
+  if(!r.length)html+='<p style="color:var(--muted)">Sin preguntas.</p>';
+  else{
+    let partes={};
+    r.forEach(p=>{(partes[p.parte]=partes[p.parte]||[]).push(p)});
+    for(const[parte,ps]of Object.entries(partes)){
+      html+='<div class="part-header">Parte '+parte+'</div>';
+      ps.forEach(p=>{html+='<p style="margin:4px 0"><b>'+parte+'.'+p.num+'.</b> '+(p.respuesta||'')+'</p>'});
+    }
+  }
+  html+='</div><button class="btn btn-primary" onclick="listarListening()">&larr; Volver</button></div>';
+  document.getElementById('listenArea').innerHTML=html;
+}
+
+async function eliminarListening(id){
+  if(!confirm('\u00bfEliminar este audio?'))return;
+  await api('listening_delete',null,{id:id});toast('\u{1F5D1}\ufe0f Audio eliminado');listarListening();
+}
+
+async function practicarListening(){
+  const r=await api('listening_list',null,{nivel:nivel});
+  const area=document.getElementById('listenArea');
+  if(!r.length){area.innerHTML='<div class="card"><p style="color:var(--muted)">No hay audios para practicar.</p></div>';return}
+  let html='<div class="card"><h3>\u{1F3AF} Practicar Listening - '+nivel+'</h3>';
+  r.forEach(a=>{
+    html+='<button class="btn btn-primary" style="display:block;width:100%;text-align:left;margin-bottom:8px" onclick="_ejercicioListening('+a.id+')">'+a.titulo+' ('+a.canal+') - \u00daltimos fallos: '+a.fallos+'</button>';
+  });
+  html+='<br><button class="btn btn-danger" onclick="listarListening()">&larr; Volver</button></div>';
+  area.innerHTML=html;
+}
+
+async function _ejercicioListening(lid){
+  const partes=EXAM[nivel];let todas=[];
+  let r=await api('preguntas_list',null,{listening_id:lid});
+  r.forEach(p=>{todas.push(p)});
+  if(!todas.length){toast('No hay preguntas para este audio');return}
+  let html='<div class="card"><h3>\u{1F3A7} Ejercicio Listening</h3>';
+  todas.forEach((p,i)=>{
+    html+='<div class="pregunta-row"><span class="pregunta-num">'+p.parte+'.'+p.num+'</span><input id="lr_'+i+'" placeholder="Tu respuesta..."></div>';
+  });
+  html+='<br><button class="btn btn-primary" onclick="corregirListening('+lid+')">&#x1F4BE; Corregir</button>'+
+    '<button class="btn btn-danger" onclick="practicarListening()">&larr; Volver</button></div>';
+  document.getElementById('listenArea').innerHTML=html;
+  window._todas=todas;
+}
+
+async function corregirListening(lid){
+  let fallos=0,detalle=[];
+  _todas.forEach((p,i)=>{
+    const el=document.getElementById('lr_'+i);
+    if(!el)return;
+    const v=el.value.trim().toLowerCase();
+    if(v!==(p.respuesta||'').trim().toLowerCase()){fallos++;detalle.push('Parte '+p.parte+', Pregunta '+p.num)}
+  });
+  await api('fallos_update',null,{id:lid,fallos:fallos});
+  let msg='Fallos: '+fallos+' de '+_todas.length;
+  if(detalle.length)msg+='\nErrores en:\n'+detalle.join('\n');
+  toast(msg);practicarListening();
+}
+
+function toggleHelp(id){
+  const el=document.getElementById(id);
+  el.style.display=el.style.display==='none'?'block':'none';
+}
+
+// INIT - set active nivel button
+document.querySelectorAll('.nivel-btn').forEach(b=>{if(b.dataset.nivel===nivel)b.classList.add('active')});
+['vocab','listen','read','speak','write'].forEach(s=>{const el=document.getElementById(s+'Nivel');if(el)el.textContent=nivel});
+</script>
+</body>
+</html>
