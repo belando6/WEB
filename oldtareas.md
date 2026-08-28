@@ -19,10 +19,9 @@ Actúa como un desarrollador Full-Stack experto y administrador de sistemas. Tu 
 ### TAREA ACTUAL (FASE 1)
 Por favor, ejecuta los siguientes pasos iniciales:
 
-1. Desarrollo de la página WEB:
-   - Quiero que desarrolles una página donde se pueda unir el audio y el video o imagen. Que se permita subir archivos y posteriormente tambien permita descargarlo una vez realizado la unión.
-   - Añade funciones que puedan ser interesantes. Opciones de edicion como duración del audio, etc..
-   - Si puedes añade funciones como editar videos que se suban como quitar el audio e intercambiarlo por otro que se seleccione. 
+1. Inspección de Repositorios y Documentación:
+   - Examina los repositorios disponibles en la cuenta belando.v2@gmail.com.
+   - Lee todos los archivos de documentación o código que estén en el repositorio counterkcal. Muy importante solo lo que esta en el repositorio counterkcal.
    
 2. Desarrollo de la Página Web:
    - Traduce, adapta y sintetiza el contenido de esos archivos para crear una nueva página web funcional dentro del proyecto.
@@ -35,6 +34,6 @@ Por favor, ejecuta los siguientes pasos iniciales:
   /var/www/html/WEB/
   ├── index.html          # sitio principal (actualizar enlace a la nueva página)
   ├── blog.html, contacto.html, portfolio.html, sobre.html
-  └── editor/             # ← sección nueva, añade todo lo que consideres necesario.      
+  └── counterkcal/             # ← sección nueva, añade todo lo que consideres necesario.      
 
   - Haz commit de todos los cambios y súbelos al repositorio remoto de GitHub.
