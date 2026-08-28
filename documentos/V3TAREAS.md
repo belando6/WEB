@@ -13,8 +13,9 @@ Actúa como un desarrollador Full-Stack experto y administrador de sistemas. Tu 
 Por favor, ejecuta los siguientes pasos iniciales:
 
 1. Desarrollo de la página WEB:
-   - Quieron que me crees una página donde pueda visualizar los archivor que hay en la carpeta documentos.
-   - Debe poder modificar esos archivos de manera sencilla. En plan abrirlos con un simple click y editarlos facilmente. 
+   - Quieron que me crees una página donde se puedan subir y bajar archivos con facilidad.
+   - Quiero que utilices este directorio para almacenar los archivos que se suban /root/compartido/
+   - Recuerda: Los archivos de programación que dan vida a la página van en /var/www/html/WEB/almacen y los archivos que suba y me pueda descargar se encontraran en /root/compartido/
    
 2. Desarrollo de la Página Web:
    - Traduce, adapta y sintetiza el contenido de esos archivos para crear una nueva página web funcional dentro del proyecto.
@@ -26,5 +27,5 @@ Por favor, ejecuta los siguientes pasos iniciales:
  
   /var/www/html/WEB/
   ├── index.html          # sitio principal (actualizar enlace a la nueva página)
-  └── documentos/             # ← sección nueva, añade todo lo que consideres necesario.      
+  └── almacen/             # ← sección nueva, añade todo lo que consideres necesario.     
 
