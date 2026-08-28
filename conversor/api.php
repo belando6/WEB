@@ -181,5 +181,6 @@ if ($method === 'POST') {
     }
 }
 
+exit;
 http_response_code(405);
 echo json_encode(['ok'=>false,'error'=>'Metodo HTTP no soportado']);
