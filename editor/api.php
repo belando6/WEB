@@ -13,6 +13,13 @@ $DB->exec("CREATE TABLE IF NOT EXISTS media (id INTEGER PRIMARY KEY AUTOINCREMEN
 $action = $_POST['action'] ?? ($_GET['action'] ?? '');
 
 // --- UPLOAD ---
+function cleanupUploads(array $files) {
+    global $UPLOADS;
+    foreach ($files as $f) {
+        if ($f && is_file("$UPLOADS/$f")) @unlink("$UPLOADS/$f");
+    }
+}
+
 if ($action === 'upload') {
     $key = $_POST['key'] ?? '';
     if (!$key || !isset($_FILES[$key])) { echo json_encode(['ok'=>false,'error'=>'Falta archivo']); exit; }
@@ -43,6 +50,7 @@ if ($action === 'combine') {
     $cmd = "ffmpeg -y -loop 1 -framerate 30 -i '$UPLOADS/$v' -i '$OUTPUT/../uploads/$a' -vf \"scale=$vw:$vh,format=yuv420p\" -c:v libx264 -preset fast -crf 23 -c:a aac -b:a 192k -t $audioDur '$OUTPUT/$outName' 2>&1";
     }
     $result = shell_exec($cmd);
+    cleanupUploads([$v,$a]);
     if (file_exists("$OUTPUT/$outName")) {
         $size = filesize("$OUTPUT/$outName");
         $DB->prepare("INSERT INTO media(type,filename,size_bytes) VALUES('combined',?,?)")->execute([$outName,$size]);
@@ -61,6 +69,7 @@ if ($action === 'trim_audio') {
     if ($userOut) { $safe = preg_replace('/[^a-zA-Z0-9_\-.]/','',$userOut); $outName = substr($safe,0,150).'.mp3'; } else { $outName = 'trimmed_' . time() . '.mp3'; }
     $cmd = "ffmpeg -y -ss $s -t " . ($e-$s) . " -i '$UPLOADS/$a' -c:a libmp3lame -b:a 192k '$OUTPUT/$outName' 2>&1";
     shell_exec($cmd);
+    cleanupUploads([$a]);
     if (file_exists("$OUTPUT/$outName")) {
         $size = filesize("$OUTPUT/$outName");
         $DB->prepare("INSERT INTO media(type,filename,size_bytes) VALUES('trimmed',?,?)")->execute([$outName,$size]);
@@ -76,6 +85,7 @@ if ($action === 'remove_audio') {
     $userOut = trim($_POST['outName'] ?? '');
     if ($userOut) { $safe = preg_replace('/[^a-zA-Z0-9_\-.]/','',$userOut); $outName = substr($safe,0,150).'.mp4'; } else { $outName = 'noaudio_' . time() . '.mp4'; }
     shell_exec("ffmpeg -y -i '$UPLOADS/$v' -an -c:v copy '$OUTPUT/$outName' 2>&1");
+    cleanupUploads([$v]);
     if (file_exists("$OUTPUT/$outName")) {
         $size = filesize("$OUTPUT/$outName");
         $DB->prepare("INSERT INTO media(type,filename,size_bytes) VALUES('no_audio',?,?)")->execute([$outName,$size]);
@@ -91,6 +101,7 @@ if ($action === 'replace_audio') {
     $userOut = trim($_POST['outName'] ?? '');
     if ($userOut) { $safe = preg_replace('/[^a-zA-Z0-9_\-.]/','',$userOut); $outName = substr($safe,0,150).'.mp4'; } else { $outName = 'replaced_' . time() . '.mp4'; }
     shell_exec("ffmpeg -y -i '$UPLOADS/$v' -i '$UPLOADS/$a' -map 0:v -map 1:a -c:v copy -c:a aac -b:a 192k -shortest '$OUTPUT/$outName' 2>&1");
+    cleanupUploads([$v,$a]);
     if (file_exists("$OUTPUT/$outName")) {
         $size = filesize("$OUTPUT/$outName");
         $DB->prepare("INSERT INTO media(type,filename,size_bytes) VALUES('replaced',?,?)")->execute([$outName,$size]);
