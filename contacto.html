@@ -1,6 +1,60 @@
 <!DOCTYPE html>
-<html lang="es"><head><meta charset="UTF-8"><title>Contacto · NEXUS</title>
-<style>*{margin:0;padding:0;box-sizing:border-box}body{min-height:100vh;background:#0a0a1a;color:#e2e8f0;font-family:'Segoe UI',system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem;text-align:center}
-.back{position:fixed;top:1.5rem;left:1.5rem;color:#94a3b8;text-decoration:none;font-size:.9rem;transition:color .3s}.back:hover{color:#7c3aed}
-.icon{font-size:3rem;margin-bottom:1rem}h1{font-size:2.2rem;margin-bottom:.75rem;background:linear-gradient(135deg,#fff,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent}p{color:#94a3b8;max-width:400px}</style></head>
-<body><a href="index.html" class="back">← Volver al menú</a><div class="icon">✉️</div><h1>Contacto</h1><p>Formulario, email, redes sociales. Validación client-side con JS.</p></body></html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Contacto · NEXUS</title>
+<meta name="description" content="Canales de comunicación, soporte y feedback del portal NEXUS.">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a1a;--card:rgba(255,255,255,.06);--border:rgba(255,255,255,.12);--accent:#7c3aed;--accent2:#06b6d4;--text:#e2e8f0;--muted:#94a3b8}
+body{min-height:100vh;background:var(--bg);color:var(--text);font-family:"Segoe UI",system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;padding:3rem 1.5rem;text-align:center}
+.back{position:fixed;top:1.5rem;left:1.5rem;color:var(--accent2);text-decoration:none;font-size:.85rem;padding:.4rem .8rem;border-radius:8px;background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.2)}
+.icon{font-size:3rem;margin-bottom:1.2rem}
+h1{font-size:clamp(1.8rem,4vw,2.6rem);font-weight:800;background:linear-gradient(135deg,#fff 30%,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.75rem}
+.subtitle{color:var(--muted);max-width:520px;font-size:.95rem;line-height:1.6;margin-bottom:2.5rem}
+.container{width:100%;max-width:640px;text-align:left;display:flex;flex-direction:column;gap:1.5rem}
+.form-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:2rem}
+.form-card h3{font-size:1rem;font-weight:700;color:#fff;margin-bottom:1.2rem}
+.field{margin-bottom:1rem}
+.field label{display:block;font-size:.8rem;color:var(--muted);margin-bottom:.4rem;font-weight:600;text-transform:uppercase;letter-spacing:1px}
+.field input,.field textarea{width:100%;padding:.8rem 1rem;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--text);font-size:.9rem;font-family:inherit;outline:none;transition:border-color .2s}
+.field input:focus,.field textarea:focus{border-color:var(--accent)}
+.field textarea{height:120px;resize:vertical;line-height:1.5}
+.submit-btn{width:100%;padding:.9rem 1.5rem;border-radius:10px;border:none;font-weight:700;font-size:.9rem;cursor:pointer;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;transition:transform .2s,box-shadow .2s}
+.submit-btn:hover{transform:scale(1.02);box-shadow:0 4px 20px rgba(124,58,237,.4)}
+.msg-list{display:flex;flex-direction:column;gap:.8rem}
+.msg-item{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:1rem 1.2rem;text-align:left}
+.msg-item .m-header{display:flex;justify-content:space-between;margin-bottom:.4rem}
+.msg-item .m-name{font-size:.85rem;font-weight:700;color:#fff}
+.msg-item .m-date{font-size:.72rem;color:var(--accent2);font-variant-numeric:tabular-nums}
+.msg-item .m-body{color:var(--muted);font-size:.85rem;line-height:1.5;white-space:pre-wrap}
+.empty{color:var(--muted);font-size:.85rem;text-align:center;padding:1.5rem}
+</style>
+</head>
+<body>
+<a href="index.html" class="back">← Volver al menú</a>
+<div class="icon">✉️</div>
+<h1>Contacto</h1>
+<p class="subtitle">Envía un mensaje y quedará guardado en el servidor. Sin spam, sin tracking.</p>
+<div class="container">
+  <div class="form-card">
+    <h3>Nuevo Mensaje</h3>
+    <form id="contactForm" onsubmit="return sendMessage(event)">
+      <div class="field"><label for="fName">Nombre</label><input type="text" id="fName" required placeholder="Tu nombre..."></div>
+      <div class="field"><label for="fEmail">Email (opcional)</label><input type="email" id="fEmail" placeholder="correo@ejemplo.com"></div>
+      <div class="field"><label for="fMsg">Mensaje</label><textarea id="fMsg" required placeholder="Escribe tu mensaje aquí..."></textarea></div>
+      <button type="submit" class="submit-btn">Enviar Mensaje ➤</button>
+    </form>
+  </div>
+  <div class="msg-list" id="msgList"><p class="empty">Cargando mensajes...</p></div>
+</div>
+<script>
+const API='contacto_api.php';
+async function api(action,data={}){const fd=new FormData();fd.append('action',action);for(const[k,v]of Object.entries(data))fd.append(k,v);return(await fetch(API,{method:'POST',body:fd})).json();}
+function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+async function loadMessages(){const d=await api('list');if(!d.ok)return;const c=document.getElementById('msgList');if(!d.messages.length){c.innerHTML='<p class="empty">Aún no hay mensajes. Sé el primero.</p>';return;}c.innerHTML=d.messages.map(m=>'<div class="msg-item"><div class="m-header"><span class="m-name">'+esc(m.name)+'</span><span class="m-date">'+(m.created_at||'')+'</span></div><div class="m-body">'+esc(m.message)+'</div></div>').join('');}
+async function sendMessage(e){e.preventDefault();const name=document.getElementById('fName').value.trim();const email=document.getElementById('fEmail').value.trim();const msg=document.getElementById('fMsg').value.trim();if(!name||!msg)return false;await api('send',{name,email,message:msg});document.getElementById('contactForm').reset();loadMessages();return false;}
+loadMessages();
+</script>
+</body>
+</html>

@@ -1,6 +1,79 @@
+echo "##active_line5##"
 <!DOCTYPE html>
-<html lang="es"><head><meta charset="UTF-8"><title>DevLog · NEXUS</title>
-<style>*{margin:0;padding:0;box-sizing:border-box}body{min-height:100vh;background:#0a0a1a;color:#e2e8f0;font-family:'Segoe UI',system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem;text-align:center}
-.back{position:fixed;top:1.5rem;left:1.5rem;color:#94a3b8;text-decoration:none;font-size:.9rem;transition:color .3s}.back:hover{color:#7c3aed}
-.icon{font-size:3rem;margin-bottom:1rem}h1{font-size:2.2rem;margin-bottom:.75rem;background:linear-gradient(135deg,#fff,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent}p{color:#94a3b8;max-width:400px}</style></head>
-<body><a href="index.html" class="back">← Volver al menú</a><div class="icon">📝</div><h1>DevLog</h1><p>Listado de artículos técnicos. Estructura: fecha + título + extracto + leer más.</p></body></html>
+echo "##active_line6##"
+<html lang="es">
+echo "##active_line7##"
+<head>
+echo "##active_line8##"
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+echo "##active_line9##"
+<title>DevLog · NEXUS</title>
+echo "##active_line10##"
+<meta name="description" content="Notas de desarrollo, tutoriales y changelogs del portal NEXUS.">
+echo "##active_line11##"
+<style>
+echo "##active_line12##"
+*{margin:0;padding:0;box-sizing:border-box}
+echo "##active_line13##"
+:root{--bg:#0a0a1a;--card:rgba(255,255,255,.06);--border:rgba(255,255,255,.12);--accent:#7c3aed;--accent2:#06b6d4;--text:#e2e8f0;--muted:#94a3b8}
+echo "##active_line14##"
+body{min-height:100vh;background:var(--bg);color:var(--text);font-family:"Segoe UI",system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;padding:3rem 1.5rem;text-align:center}
+echo "##active_line15##"
+.back{position:fixed;top:1.5rem;left:1.5rem;color:var(--accent2);text-decoration:none;font-size:.85rem;padding:.4rem .8rem;border-radius:8px;background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.2)}
+echo "##active_line16##"
+.icon{font-size:3rem;margin-bottom:1.2rem}
+echo "##active_line17##"
+h1{font-size:clamp(1.8rem,4vw,2.6rem);font-weight:800;background:linear-gradient(135deg,#fff 30%,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.75rem}
+echo "##active_line18##"
+.subtitle{color:var(--muted);max-width:520px;font-size:.95rem;line-height:1.6;margin-bottom:2.5rem}
+echo "##active_line19##"
+.posts{width:100%;max-width:780px;text-align:left;display:flex;flex-direction:column;gap:1.2rem}
+echo "##active_line20##"
+.post{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.5rem 1.8rem;transition:border-color .3s,transform .3s}
+echo "##active_line21##"
+.post:hover{border-color:rgba(124,58,237,.3);transform:translateY(-2px)}
+echo "##active_line22##"
+.post-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem}
+echo "##active_line23##"
+.post-date{font-size:.75rem;color:var(--accent2);font-weight:600;font-variant-numeric:tabular-nums}
+echo "##active_line24##"
+.post h3{font-size:1.05rem;font-weight:700;color:#fff;margin-bottom:.4rem}
+echo "##active_line25##"
+.post p{color:var(--muted);font-size:.88rem;line-height:1.6}
+echo "##active_line26##"
+.post .read-more{display:inline-block;margin-top:.8rem;font-size:.8rem;color:var(--accent2);text-decoration:none;font-weight:600;transition:transform .2s}
+echo "##active_line27##"
+.post:hover .read-more{transform:translateX(4px)}
+echo "##active_line28##"
+</style>
+echo "##active_line29##"
+</head>
+echo "##active_line30##"
+<body>
+echo "##active_line31##"
+<a href="index.html" class="back">← Volver al menú</a>
+echo "##active_line32##"
+<div class="icon">📝</div>
+echo "##active_line33##"
+<h1>DevLog</h1>
+echo "##active_line34##"
+<p class="subtitle">Notas de desarrollo, tutoriales y changelogs. Estructura: fecha + título + extracto.</p>
+echo "##active_line35##"
+<div class="posts">
+echo "##active_line36##"
+  <article class="post"><div class="post-header"><span class="post-date">2026-08-28</span></div><h3>Chat de Sesiones — Lanzamiento</h3><p>Nueva sección completa: multi-sesión, copiar/pegar entre dispositivos, upload de archivos. Backend PHP 8.4 + SQLite con API REST interna. Sin frameworks, sin build step.</p><a href="chat/index.html" class="read-more">Ver módulo →</a></article>
+echo "##active_line37##"
+  <article class="post"><div class="post-header"><span class="post-date">2026-08-27</span></div><h3>Editor Multimedia — Detección de Imagen vs Video</h3><p>FFprobe detecta si el input es imagen (sin stream real) y genera video loop con la duración del audio. Escala a pares para compatibilidad H.264.</p><a href="editor/index.html" class="read-more">Ver módulo →</a></article>
+echo "##active_line38##"
+  <article class="post"><div class="post-header"><span class="post-date">2026-08-27</span></div><h3>CounterKCal — BD de Alimentos</h3><p>SQLite con tabla de alimentos pre-cargada. Búsqueda por nombre, registro en gramos y cálculo automático de kcal totales del día.</p><a href="counterkcal/index.php" class="read-more">Ver módulo →</a></article>
+echo "##active_line39##"
+  <article class="post"><div class="post-header"><span class="post-date">2026-08-27</span></div><h3>Migración a PHP 8.4</h3><p>Ubuntu 24.04 trae PHP 8.4 por defecto. PDO/SQLite funciona out-of-the-box. Se eliminan patrones legacy (mysql_*, create_function). Cero breaking changes en el stack actual.</p></article>
+echo "##active_line40##"
+  <article class="post"><div class="post-header"><span class="post-date">2026-08-27</span></div><h3>Estructura del Portal v2.0</h3><p>Cada módulo vive en su propia carpeta con index + api.php + BD local. El menú principal (index.html) es un grid de cards auto-fit. Sin router, sin framework: URLs directas.</p></article>
+echo "##active_line41##"
+</div>
+echo "##active_line42##"
+</body>
+echo "##active_line43##"
+</html>
+echo "##active_line44##"
