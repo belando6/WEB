@@ -163,24 +163,30 @@ if ($method === 'POST') {
         http_response_code(400); echo json_encode(['ok'=>false,'error'=>'Conversion no valida']); exit;
     }
 
-    $dest = $uploadDir . '/' . pathinfo($name, PATHINFO_FILENAME) . '.' . $destino;
-    move_uploaded_file($_FILES['archivo']['tmp_name'], $dest);
+    // Subir con nombre temporal (extension ORIGINAL)
+    $tmpBase = uniqid('up_') . '_' . pathinfo($name, PATHINFO_FILENAME);
+    $srcPath = $uploadDir . '/' . $tmpBase . '.' . $ext;
+    move_uploaded_file($_FILES['archivo']['tmp_name'], $srcPath);
 
-    $res = convertir($dest, $destino);
+    // Convertir: genera /uploads/{basename_original}.{destino}
+    $res = convertir($srcPath, $destino);
 
     if ($res['ok']) {
         db_log($ip, $name, $destino, 1);
-        @unlink($dest);
-        $url = '/WEB/conversor/uploads/' . basename($res['file']);
-        echo json_encode(['ok'=>true,'file'=>$res['file'],'url'=>$url,'origen'=>$name]);
+        @unlink($srcPath);
+        $finalName = pathinfo($name, PATHINFO_FILENAME) . '.' . $destino;
+        $finalPath = $uploadDir . '/' . $finalName;
+        if (file_exists($finalPath)) @unlink($finalPath);
+        rename($res['file'], $finalPath);
+        $url = '/WEB/conversor/uploads/' . $finalName;
+        echo json_encode(['ok'=>true,'file'=>$finalPath,'url'=>$url,'origen'=>$name]);
     } else {
         db_log($ip, $name, $destino, 0, $res['error']);
-        @unlink($dest);
+        @unlink($srcPath);
         http_response_code(500);
         echo json_encode(['ok'=>false,'error'=>$res['error']]);
     }
 }
-
 exit;
 http_response_code(405);
 echo json_encode(['ok'=>false,'error'=>'Metodo HTTP no soportado']);
