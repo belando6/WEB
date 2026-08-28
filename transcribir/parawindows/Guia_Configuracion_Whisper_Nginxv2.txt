@@ -1,0 +1,403 @@
+================================================================================
+ GUÍA DE CONFIGURACIÓN: SERVIDOR WHISPER + GESTOR GPU + PROXY NGINX
+================================================================================
+
+ARQUITECTURA DEL SISTEMA:
+-------------------------
+[Cliente / Navegador Web]
+       │ (Puerto 80 HTTP)
+       ▼
+┌────────────────────────────────────────────────────────┐
+│ Servidor Nginx (Proxy Inverso)                         │
+│  - Servidor Web (index.html)                          │
+│  - Proxy /api/manager/ ──> http://172.31.252.15:8001/  │
+│  - Proxy /api/whisper/ ──> http://172.31.252.15:8000/  │
+└────────────────────────────────────────────────────────┘
+       │
+       ▼
+┌────────────────────────────────────────────────────────┐
+│ Servidor GPU (Windows 11 - IP: 172.31.252.15)          │
+│  - Manager (Puerto 8001): Enciende/Apaga Whisper      │
+│  - Whisper (Puerto 8000): Transcribe audio/video GPU   │
+└────────────────────────────────────────────────────────┘
+
+
+================================================================================
+ PARTE 1: SERVIDOR GPU (WINDOWS 11 - IP: 172.31.252.15)
+================================================================================
+
+--- 1. PREPARACIÓN DE LA CARPETA Y ENTORNO VIRTUAL ---
+Abre la consola de comandos (CMD) y ejecuta:
+
+cd C:\
+mkdir WhisperServer
+cd WhisperServer
+python -m venv venv
+call venv\Scripts\activate
+pip install fastapi uvicorn python-multipart faster-whisper
+
+*(Nota: Asegúrate de tener FFmpeg instalado y añadido al PATH de Windows).*
+
+
+--- 2. ARCHIVO C:\WhisperServer\server.py ---
+--------------------------------------------------------------------------------
+import os
+import subprocess
+import tempfile
+from fastapi import FastAPI, UploadFile, File, Form
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+from faster_whisper import WhisperModel
+
+os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
+os.environ["TRANSFORMERS_VERBOSITY"] = "error"
+
+app = FastAPI(title="Servidor Whisper GPU")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+MODEL_SIZE = "large-v3"
+print("🧠 Cargando modelo de Whisper en GPU...")
+model = WhisperModel(MODEL_SIZE, device="cuda", compute_type="float16")
+print("✅ Modelo cargado correctamente en GPU.")
+
+def format_timestamp(seconds: float) -> str:
+    hours = int(seconds // 3600)
+    minutes = int((seconds % 3600) // 60)
+    secs = int(seconds % 60)
+    millis = int((seconds - int(seconds)) * 1000)
+    return f"{hours:02}:{minutes:02}:{secs:02},{millis:03}"
+
+@app.post("/transcribir/")
+async def transcribir_video(
+    file: UploadFile = File(...), 
+    language: str = Form("es")
+):
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_video:
+        temp_video.write(await file.read())
+        video_path = temp_video.name
+        
+    audio_path = video_path + ".wav"
+
+    try:
+        subprocess.run([
+            "ffmpeg", "-y", "-i", video_path,
+            "-vn", "-ac", "1", "-ar", "16000", "-f", "wav", audio_path
+        ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+        segments, info = model.transcribe(audio_path, language=language)
+
+        full_text = ""
+        srt_content = ""
+        srt_counter = 1
+
+        for segment in segments:
+            full_text += segment.text.strip() + " "
+            start = format_timestamp(segment.start)
+            end = format_timestamp(segment.end)
+            srt_content += f"{srt_counter}\n{start} --> {end}\n{segment.text.strip()}\n\n"
+            srt_counter += 1
+
+        return JSONResponse(content={
+            "texto_plano": full_text.strip(),
+            "srt": srt_content.strip()
+        })
+
+    finally:
+        if os.path.exists(video_path):
+            os.remove(video_path)
+        if os.path.exists(audio_path):
+            os.remove(audio_path)
+--------------------------------------------------------------------------------
+
+
+--- 3. ARCHIVO C:\WhisperServer\manager.py ---
+--------------------------------------------------------------------------------
+import os
+import subprocess
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
+
+app = FastAPI(title="Gestor GPU Whisper")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+whisper_process = None
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PYTHON_EXE = os.path.join(SCRIPT_DIR, "venv", "Scripts", "python.exe")
+
+@app.post("/encender")
+def encender():
+    global whisper_process
+    if whisper_process is None or whisper_process.poll() is not None:
+        cmd = [PYTHON_EXE, "-m", "uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
+        whisper_process = subprocess.Popen(cmd, cwd=SCRIPT_DIR)
+        return {"status": "ok", "mensaje": "Iniciando Whisper en la GPU..."}
+    return {"status": "ok", "mensaje": "El servidor ya está encendido."}
+
+@app.post("/apagar")
+def apagar():
+    global whisper_process
+    if whisper_process and whisper_process.poll() is None:
+        subprocess.run(["taskkill", "/F", "/T", "/PID", str(whisper_process.pid)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        whisper_process = None
+        return {"status": "ok", "mensaje": "Servidor detenido. Memoria VRAM liberada."}
+    return {"status": "ok", "mensaje": "El servidor ya está apagado."}
+
+@app.get("/estado")
+def estado():
+    global whisper_process
+    activo = whisper_process is not None and whisper_process.poll() is None
+    return {"activo": activo}
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8001)
+--------------------------------------------------------------------------------
+
+
+--- 4. LANZADOR DE ESCRITORIO: Iniciar_Gestor.bat ---
+--------------------------------------------------------------------------------
+@echo off
+title Gestor GPU Whisper (Puerto 8001)
+color 0A
+cd /d "C:\WhisperServer"
+call venv\Scripts\activate
+echo ===================================================
+echo      GESTOR LIGERO EN EJECUCION
+echo      Escuchando en el puerto 8001...
+echo ===================================================
+python manager.py
+pause
+--------------------------------------------------------------------------------
+
+
+--- 5. REGLAS DE FIREWALL WINDOWS (CMD Administrador) ---
+--------------------------------------------------------------------------------
+netsh advfirewall firewall add rule name="Whisper GPU (8000)" dir=in action=allow protocol=TCP localport=8000
+netsh advfirewall firewall add rule name="Gestor GPU (8001)" dir=in action=allow protocol=TCP localport=8001
+--------------------------------------------------------------------------------
+
+
+================================================================================
+ PARTE 2: SERVIDOR NGINX (PROXY INVERSO)
+================================================================================
+
+--- 1. CONFIGURACIÓN DE NGINX (nginx.conf / sites-available/default) ---
+--------------------------------------------------------------------------------
+server {
+    listen 80;
+    server_name _;
+
+    # Permitir archivos de hasta 1GB
+    client_max_body_size 1000M;
+
+    # Tiempos de espera ampliados a 10 minutos
+    proxy_connect_timeout 600s;
+    proxy_send_timeout    600s;
+    proxy_read_timeout    600s;
+
+    # 1. Servir la web estática
+    location / {
+        root /var/www/whisper-web;
+        index index.html;
+        try_files $uri $uri/ /index.html;
+    }
+
+    # 2. Proxy al Gestor (Encender/Apagar GPU)
+    location /api/manager/ {
+        proxy_pass http://172.31.252.15:8001/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    # 3. Proxy al Servidor Whisper (Transcripción)
+    location /api/whisper/ {
+        proxy_pass http://172.31.252.15:8000/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+--------------------------------------------------------------------------------
+Reiniciar Nginx: sudo systemctl restart nginx
+
+
+--- 2. INTERFAZ WEB: /var/www/whisper-web/index.html ---
+--------------------------------------------------------------------------------
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Herramienta de Transcripción Whisper</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 700px; margin: 40px auto; padding: 20px; background: #f4f6f9; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        button { padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-right: 10px; }
+        .btn-on { background: #28a745; color: white; }
+        .btn-off { background: #dc3545; color: white; }
+        .btn-send { background: #007bff; color: white; width: 100%; margin-top: 15px; }
+        .btn-send:disabled { background: #cccccc; cursor: not-allowed; }
+        .status { font-weight: bold; padding: 5px 10px; border-radius: 4px; display: inline-block; }
+        .status-off { background: #e2e3e5; color: #383d41; }
+        .status-on { background: #d4edda; color: #155724; }
+        textarea { width: 100%; height: 120px; margin-top: 10px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; }
+    </style>
+</head>
+<body>
+
+    <h2>🎙️ Transcripción Whisper (GPU Remota)</h2>
+
+    <div class="card">
+        <h3>1. Control de la Tarjeta Gráfica</h3>
+        <p>Estado actual: <span id="estado" class="status status-off">Comprobando...</span></p>
+        <button class="btn-on" onclick="encenderServidor()">⚡ Encender GPU</button>
+        <button class="btn-off" onclick="apagarServidor()">🔴 Apagar GPU (Liberar VRAM)</button>
+    </div>
+
+    <div class="card">
+        <h3>2. Transcribir Archivo</h3>
+        <input type="file" id="videoFile" accept="video/*,audio/*"><br><br>
+        <label>Idioma del audio:</label>
+        <select id="language">
+            <option value="es">Español</option>
+            <option value="en">Inglés</option>
+            <option value="fr">Francés</option>
+        </select>
+        <br>
+        <button id="btnTranscribir" class="btn-send" onclick="transcribir()" disabled>Enciende la GPU para transcribir</button>
+    </div>
+
+    <div class="card" id="resultados" style="display:none;">
+        <h3>3. Resultados</h3>
+        <p><strong>Texto Completo:</strong></p>
+        <textarea id="textoPlano" readonly></textarea>
+        <br><br>
+        <button class="btn-on" onclick="descargar('transcripcion.txt', document.getElementById('textoPlano').value)">Descargar .TXT</button>
+        <button class="btn-on" onclick="descargar('transcripcion.srt', srtContent)">Descargar Subtítulos .SRT</button>
+    </div>
+
+    <script>
+        const URL_GESTOR = '/api/manager';
+        const URL_WHISPER = '/api/whisper/transcribir/';
+        let srtContent = "";
+
+        async function comprobarEstado() {
+            try {
+                const res = await fetch(`${URL_GESTOR}/estado`);
+                const data = await res.json();
+                const el = document.getElementById("estado");
+                const btn = document.getElementById("btnTranscribir");
+                
+                if(data.activo) {
+                    el.innerText = "ENCENDIDO (GPU Lista)";
+                    el.className = "status status-on";
+                    btn.disabled = false;
+                    btn.innerText = "Transcribir Archivo";
+                } else {
+                    el.innerText = "APAGADO (VRAM Libre)";
+                    el.className = "status status-off";
+                    btn.disabled = true;
+                    btn.innerText = "Enciende la GPU para transcribir";
+                }
+            } catch(e) {
+                document.getElementById("estado").innerText = "Servidor no responde";
+            }
+        }
+
+        async function encenderServidor() {
+            document.getElementById("estado").innerText = "Cargando modelo en VRAM...";
+            await fetch(`${URL_GESTOR}/encender`, { method: "POST" });
+            setTimeout(comprobarEstado, 4000);
+        }
+
+        async function apagarServidor() {
+            await fetch(`${URL_GESTOR}/apagar`, { method: "POST" });
+            comprobarEstado();
+        }
+
+        async function transcribir() {
+            const fileInput = document.getElementById("videoFile");
+            if(!fileInput.files[0]) return alert("Selecciona un archivo de audio o video primero.");
+
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+            formData.append("language", document.getElementById("language").value);
+
+            const btn = document.getElementById("btnTranscribir");
+            btn.disabled = true;
+            btn.innerText = "Transcribiendo... Por favor espera.";
+
+            try {
+                const res = await fetch(URL_WHISPER, { method: "POST", body: formData });
+                const data = await res.json();
+
+                document.getElementById("textoPlano").value = data.texto_plano;
+                srtContent = data.srt;
+                document.getElementById("resultados").style.display = "block";
+            } catch(e) {
+                alert("Error durante la transcripción. Comprueba el archivo o la GPU.");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Transcribir Otro Archivo";
+            }
+        }
+
+        function descargar(nombre, contenido) {
+            const blob = new Blob([contenido], { type: 'text/plain;charset=utf-8' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = nombre;
+            a.click();
+        }
+
+        setInterval(comprobarEstado, 3000);
+        comprobarEstado();
+    </script>
+</body>
+</html>
+--------------------------------------------------------------------------------
+
+
+================================================================================
+ RESUMEN DEL FLUJO DE TRABAJO
+================================================================================
+1. En Windows (172.31.252.15), ejecutas 'Iniciar_Gestor.bat'. Queda escuchando en el puerto 8001.
+2. Los clientes acceden a la Web servida por Nginx.
+3. Al pulsar 'Encender GPU', Nginx redirige a http://172.31.252.15:8001/encender y se inicia Whisper en el puerto 8000 cargando el modelo en VRAM.
+4. Al transcribir, Nginx redirige el vídeo a http://172.31.252.15:8000/transcribir/ y devuelve el resultado .txt y .srt.
+5. Al pulsar 'Apagar GPU', Nginx redirige a http://172.31.252.15:8001/apagar y mata el proceso de Whisper liberando la GPU al 100%.
+================================================================================
+
+================================================================================
+ SOLUCIÓN DE PROBLEMAS COMUNES: ERROR cublas64_12.dll
+================================================================================
+Si al iniciar la transcripción en la GPU recibes un error que indica:
+"RuntimeError: Library cublas64_12.dll is not found or cannot be loaded"
+
+Esto ocurre porque faster-whisper necesita las librerías de NVIDIA para usar la tarjeta gráfica.
+Para solucionarlo en tu Windows 11 (IP: 172.31.252.15):
+
+1. Instala NVIDIA CUDA Toolkit 12.x (por ejemplo, CUDA 12.8).
+2. Descarga e instala el paquete cuDNN compatible para Windows x86_64 (ej. cuDNN 9.x para Windows 11).
+3. Reinicia por completo el servidor Windows para que el sistema reconozca las librerías DLL.
+
+*Alternativa si no usas tarjeta NVIDIA:*
+Si por algún motivo no usas gráfica dedicada, puedes cambiar en 'server.py':
+model = WhisperModel(MODEL_SIZE, device="cuda", compute_type="float16")
+Por:
+model = WhisperModel(MODEL_SIZE, device="cpu", compute_type="int8")
+================================================================================

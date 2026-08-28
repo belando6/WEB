@@ -96,7 +96,7 @@ let srtContent = "";
 
 async function comprobarEstado() {
     try {
-        const res = await fetch(`${URL_GESTOR}/estado);
+        const res = await fetch(`${URL_GESTOR}/estado`);
         if (!res.ok) throw new Error();
         const data = await res.json();
         const el = document.getElementById("estado");
