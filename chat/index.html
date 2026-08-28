@@ -168,7 +168,17 @@ async function loadMessages2(){
 
 function copyMsg(btn){
   const idx=parseInt(btn.dataset.idx);
-  if(_msgCache[idx]) navigator.clipboard.writeText(_msgCache[idx].content).then(()=>{btn.textContent='✓ Copiado';setTimeout(()=>btn.textContent='📋 Copiar',1500);});
+  if(!_msgCache[idx])return;
+  const text=_msgCache[idx].content;
+  const done=()=>{btn.textContent='✓ Copiado';setTimeout(()=>btn.textContent='📋 Copiar',1500);};
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text,done));
+  } else fallbackCopy(text,done);
+}
+function fallbackCopy(text,done){
+  const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.left='-9999px';document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');}catch(e){alert('No se pudo copiar automáticamente. Selecciona el texto manualmente.');}
+  document.body.removeChild(ta);done();
 }
 
 async function sendMessage(){
@@ -178,7 +188,16 @@ async function sendMessage(){
 }
 
 function pasteFromClipboard(){
-  navigator.clipboard.readText().then(t=>{document.getElementById('msgInput').value=t;}).catch(()=>{});
+  const inp=document.getElementById('msgInput');
+  if(navigator.clipboard&&navigator.clipboard.readText){
+    navigator.clipboard.readText().then(t=>{if(t)inp.value=t;else focusAndHint(inp);}).catch(()=>focusAndHint(inp));
+  } else focusAndHint(inp);
+}
+function focusAndHint(inp){
+  inp.focus();
+  const bar=document.querySelector('.paste-btn');
+  const orig=bar.textContent;bar.textContent='📋 Ahora pulsa Ctrl+V para pegar';
+  setTimeout(()=>{bar.textContent=orig;},2500);
 }
 
 async function deleteMsg(id){await api('delete_message',{message_id:id});loadMessages2();loadSessions();}
