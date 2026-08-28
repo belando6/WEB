@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>NEXUS · Transcripción Whisper</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a1a;--card:rgba(255,255,255,.06);--border:rgba(255,255,255,.12);--accent:#7c3aed;--accent2:#06b6d4;--text:#e2e8f0;--muted:#94a3b8}
+body{min-height:100vh;background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;padding:2rem;position:relative;overflow-x:hidden}
+body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(ellipse at 30% 50%,rgba(124,58,237,.12) 0%,transparent 60%),radial-gradient(ellipse at 70% 30%,rgba(6,182,212,.08) 0%,transparent 50%);animation:drift 20s ease-in-out infinite alternate;pointer-events:none;z-index:0}
+@keyframes drift{to{transform:translate(5%,3%) rotate(2deg)}}
+.grid-bg{position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:60px 60px;z-index:0;pointer-events:none}
+.header{text-align:center;margin-bottom:2rem;z-index:1;animation:fadeUp .8s ease both}
+.logo{font-size:.75rem;letter-spacing:6px;text-transform:uppercase;color:var(--accent2);margin-bottom:.75rem;font-weight:600}
+h1{font-size:clamp(1.8rem,4vw,2.8rem);font-weight:800;background:linear-gradient(135deg,#fff 30%,var(--accent) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.5rem}
+.subtitle{color:var(--muted);font-size:.95rem;max-width:480px;margin:auto}
+.back-link{display:inline-flex;align-items:center;gap:.4rem;color:var(--accent2);text-decoration:none;font-size:.85rem;margin-bottom:1.5rem;transition:opacity .3s}.back-link:hover{opacity:.7}
+.container{width:100%;max-width:680px;z-index:1;display:flex;flex-direction:column;gap:1.2rem}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.5rem 1.3rem;animation:fadeUp .8s ease both}
+.card:nth-child(1){animation-delay:.1s}.card:nth-child(2){animation-delay:.2s}.card:nth-child(3){animation-delay:.3s}
+.card h3{font-size:1rem;font-weight:700;margin-bottom:.8rem;color:#fff;display:flex;align-items:center;gap:.5rem}
+.status-row{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+.status{font-weight:600;padding:4px 12px;border-radius:6px;font-size:.85rem}
+.status-off{background:rgba(255,255,255,.08);color:#94a3b8}
+.status-on{background:rgba(34,197,94,.15);color:#4ade80}
+.btn{padding:10px 16px;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:.9rem;transition:all .2s}
+.btn-on{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff}.btn-on:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(34,197,94,.3)}
+.btn-off{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff}.btn-off:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(239,68,68,.3)}
+.btn-send{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;width:100%;margin-top:.8rem;padding:12px;font-size:.95rem}
+.btn-send:disabled{opacity:.4;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+.btn-send:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 20px rgba(124,58,237,.3)}
+input[type=file]{width:100%;padding:.8rem;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);font-size:.9rem;cursor:pointer}
+input[type=file]::file-selector-button{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-weight:600;margin-right:10px}
+select{width:100%;padding:.7rem .8rem;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--text);font-size:.9rem;appearance:none;-webkit-appearance:none}
+select option{background:#1a1a2e;color:var(--text)}
+label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:.4rem;margin-top:.8rem}
+textarea{width:100%;height:160px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:.8rem;font-size:.9rem;resize:vertical;line-height:1.6}
+.result-actions{display:flex;gap:.8rem;margin-top:1rem;flex-wrap:wrap}
+.btn-dl{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:600;font-size:.85rem;transition:all .2s}.btn-dl:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(124,58,237,.3)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:520px){.container{max-width:100%}.card{padding:1.2rem 1rem}}
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+
+<header class="header">
+  <a href="../index.html" class="back-link">← Volver al Portal</a>
+  <p class="logo">NEXUS · Transcripción</p>
+  <h1>🎙️ Whisper GPU Remota</h1>
+  <p class="subtitle">Transcribe audio/vídeo a texto y subtítulos SRT usando la GPU remota. Enciende la GPU, sube tu archivo y obtén el resultado.</p>
+</header>
+
+<div class="container">
+  <!-- Control GPU -->
+  <div class="card">
+    <h3>⚡ Control de GPU</h3>
+    <div class="status-row">
+      <span id="estado" class="status status-off">Comprobando...</span>
+      <button class="btn btn-on" onclick="encenderServidor()">Encender GPU</button>
+      <button class="btn btn-off" onclick="apagarServidor()">Apagar (Liberar VRAM)</button>
+    </div>
+  </div>
+
+  <!-- Transcribir -->
+  <div class="card">
+    <h3>📁 Transcribir Archivo</h3>
+    <input type="file" id="videoFile" accept="video/*,audio/*,.mp4,.mkv,.webm,.wav,.mp3,.flac,.ogg,.m4a">
+    <label>Idioma del audio:</label>
+    <select id="language">
+      <option value="es">Español</option>
+      <option value="en">Inglés</option>
+      <option value="fr">Francés</option>
+      <option value="de">Alemán</option>
+      <option value="it">Italiano</option>
+    </select>
+    <button id="btnTranscribir" class="btn btn-send" onclick="transcribir()" disabled>Enciende la GPU para transcribir</button>
+  </div>
+
+  <!-- Resultados -->
+  <div class="card" id="resultados" style="display:none">
+    <h3>📝 Resultados</h3>
+    <p style="font-size:.85rem;color:var(--muted);margin-bottom:.6rem"><strong>Texto Completo:</strong></p>
+    <textarea id="textoPlano" readonly></textarea>
+    <div class="result-actions">
+      <button class="btn-dl" onclick="descargar('transcripcion.txt', document.getElementById('textoPlano').value)">⬇ .TXT</button>
+      <button class="btn-dl" onclick="descargar('transcripcion.srt', srtContent)">⬇ Subtítulos .SRT</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const URL_GESTOR = '/api/manager';
+const URL_WHISPER = '/api/whisper/transcribir/';
+let srtContent = "";
+
+async function comprobarEstado() {
+    try {
+        const res = await fetch(`${URL_GESTOR}/estado);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        const el = document.getElementById("estado");
+        const btn = document.getElementById("btnTranscribir");
+        if (data.activo) {
+            el.innerText = "ENCENDIDO · GPU Lista";
+            el.className = "status status-on";
+            btn.disabled = false;
+            btn.innerText = "🚀 Transcribir Archivo";
+        } else {
+            el.innerText = "APAGADO · VRAM Libre";
+            el.className = "status status-off";
+            btn.disabled = true;
+            btn.innerText = "Enciende la GPU para transcribir";
+        }
+    } catch(e) {
+        document.getElementById("estado").innerText = "Servidor no responde";
+        document.getElementById("btnTranscribir").disabled = true;
+    }
+}
+
+async function encenderServidor() {
+    const el = document.getElementById("estado");
+    el.innerText = "Cargando modelo en VRAM...";
+    el.className = "status status-off";
+    try {
+        await fetch(`${URL_GESTOR}/encender`, { method: "POST" });
+        setTimeout(comprobarEstado, 4000);
+    } catch(e) {
+        el.innerText = "Error al encender";
+    }
+}
+
+async function apagarServidor() {
+    try {
+        await fetch(`${URL_GESTOR}/apagar`, { method: "POST" });
+        comprobarEstado();
+    } catch(e) {}
+}
+
+async function transcribir() {
+    const fileInput = document.getElementById("videoFile");
+    if (!fileInput.files[0]) return alert("Selecciona un archivo de audio o vídeo primero.");
+
+    const formData = new FormData();
+    formData.append("file", fileInput.files[0]);
+    formData.append("language", document.getElementById("language").value);
+
+    const btn = document.getElementById("btnTranscribir");
+    btn.disabled = true;
+    btn.innerText = "⏳ Transcribiendo... Por favor espera.";
+
+    try {
+        const res = await fetch(URL_WHISPER, { method: "POST", body: formData });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+        document.getElementById("textoPlano").value = data.texto_plano || "";
+        srtContent = data.srt || "";
+        document.getElementById("resultados").style.display = "block";
+    } catch(e) {
+        alert("Error durante la transcripción. Comprueba el archivo o la GPU.");
+    } finally {
+        btn.disabled = false;
+        btn.innerText = "🚀 Transcribir Otro Archivo";
+    }
+}
+
+function descargar(nombre, contenido) {
+    const blob = new Blob([contenido], { type: 'text/plain;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = nombre;
+    a.click();
+    URL.revokeObjectURL(a.href);
+}
+
+setInterval(comprobarEstado, 5000);
+comprobarEstado();
+</script>
+</body>
+</html>
