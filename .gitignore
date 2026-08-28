@@ -1,0 +1,35 @@
+echo "##active_line4##"
+# Bases de datos SQLite (datos de usuarios — NUNCA versionar)
+echo "##active_line5##"
+*.db
+echo "##active_line6##"
+*.db-journal
+echo "##active_line7##"
+*.db-wal
+echo "##active_line8##"
+*.db-shm
+echo "##active_line9##"
+
+echo "##active_line10##"
+# Uploads de usuario
+echo "##active_line11##"
+chat/uploads/*
+echo "##active_line12##"
+editor/uploads/*
+echo "##active_line13##"
+editor/output/*
+echo "##active_line14##"
+!*/uploads/.gitkeep
+echo "##active_line15##"
+!*/output/.gitkeep
+echo "##active_line16##"
+
+echo "##active_line17##"
+# Logs y temporales
+echo "##active_line18##"
+*.log
+echo "##active_line19##"
+tmp/
+echo "##active_line20##"
+.cache/
+echo "##active_line21##"
