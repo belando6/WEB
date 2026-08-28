@@ -105,7 +105,7 @@ function convertir($src, $dstExt) {
 
     // --- LibreOffice: documentos ofimáticos ---
     if (in_array($origen, ['txt','md','csv','html','htm','rtf','doc','docx','odt','xls','xlsx','ods','ppt','pptx','odp'])) {
-        $cmd = "libreoffice --headless --convert-to $dstExt --outdir '$uploadDir' '$src' 2>&1";
+        $cmd = "libreoffice -env:UserInstallation=file:///tmp/lo_$RANDOM --headless --convert-to $dstExt --outdir '$uploadDir' '$src' 2>&1";
     }
     // --- FFmpeg: audio y video ---
     elseif (in_array($origen, ['mp3','wav','ogg','flac','m4a','aac','wma','opus',
