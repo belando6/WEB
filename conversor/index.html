@@ -48,17 +48,18 @@ h1{font-size:clamp(1.8rem,4vw,2.6rem);font-weight:800;background:linear-gradient
 .result .msg{padding:1rem;font-size:.9rem;line-height:1.5}
 .dl-btn{display:inline-flex;align-items:center;gap:.4rem;padding:.7rem 1.4rem;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;text-decoration:none;font-weight:600;margin-top:.8rem}
 
-.hist{width:100%;max-width:640px;margin-top:2rem}
-.hist h3{font-size:1rem;color:var(--muted);margin-bottom:.8rem;display:flex;align-items:center;gap:.5rem}
-.hist-table{width:100%;border-collapse:collapse;font-size:.82rem}
-.hist-table th{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--border);color:var(--muted)}
-.hist-table td{padding:.45rem .6rem;border-bottom:1px solid rgba(255,255,255,.04)}
-.dot-ok{width:8px;height:8px;border-radius:50%;background:var(--ok);display:inline-block}
-.dot-err{width:8px;height:8px;border-radius:50%;background:var(--err);display:inline-block}
-
-.cats{display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1.2rem;justify-content:center}
-.cat-btn{padding:.4rem .9rem;border-radius:8px;font-size:.8rem;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:all .2s}
-.cat-btn:hover{background:rgba(124,58,237,.1);color:var(--text)}
+.bib{width:100%;max-width:640px;margin-top:2rem;animation:fadeUp .4s ease both}
+.bib h3{font-size:1rem;color:var(--muted);margin-bottom:.8rem;display:flex;align-items:center;gap:.5rem}
+.bib-table{width:100%;border-collapse:collapse;font-size:.82rem}
+.bib-table th{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--border);color:var(--muted)}
+.bib-table td{padding:.45rem .6rem;border-bottom:1px solid rgba(255,255,255,.04)}
+.bib-actions{display:flex;gap:.4rem}
+.btn-sm{padding:.3rem .7rem;border-radius:8px;font-size:.75rem;font-weight:600;border:none;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:.3rem;transition:all .2s}
+.btn-dl{background:rgba(6,182,212,.15);color:var(--accent2)}
+.btn-dl:hover{background:rgba(6,182,212,.3)}
+.btn-del{background:rgba(239,68,68,.15);color:var(--err)}
+.btn-del:hover{background:rgba(239,68,68,.3)}
+.empty{text-align:center;color:var(--muted);padding:1rem;font-size:.85rem}
 
 @media(max-width:480px){.drop{padding:1.5rem 1rem}.dest-grid{gap:.4rem}}
 </style>
@@ -69,12 +70,6 @@ h1{font-size:clamp(1.8rem,4vw,2.6rem);font-weight:800;background:linear-gradient
 <a href="../index.html" class="back">← Volver al Portal</a>
 <h1>🔄 Conversor Multiusos</h1>
 <p class="sub">Convierte documentos, imágenes y multimedia. Arrastra tu archivo para empezar.</p>
-
-<div class="cats">
-  <button class="cat-btn" onclick="filterCat('doc')">📄 Documentos</button>
-  <button class="cat-btn" onclick="filterCat('img')">🖼️ Imágenes</button>
-  <button class="cat-btn" onclick="filterCat('av')">🎬 Audio / Video</button>
-</div>
 
 <div class="drop" id="drop">
   <span class="icon-big">📂</span>
@@ -103,9 +98,9 @@ h1{font-size:clamp(1.8rem,4vw,2.6rem);font-weight:800;background:linear-gradient
   <a class="dl-btn" id="dlBtn" hidden download>⬇️ Descargar archivo</a>
 </div>
 
-<div class="hist" id="histSec" style="display:none">
-  <h3>📋 Historial reciente</h3>
-  <table class="hist-table"><thead><tr><th></th><th>Archivo</th><th>→</th><th>Fecha</th></tr></thead><tbody id="histBody"></tbody></table>
+<div class="bib" id="bibSec">
+  <h3>📚 Biblioteca de archivos generados</h3>
+  <table class="bib-table"><thead><tr><th>Archivo</th><th>Tamaño</th><th>Fecha</th><th>Acciones</th></tr></thead><tbody id="bibBody"></tbody></table>
 </div>
 
 <script>
@@ -116,7 +111,7 @@ const convBox=document.getElementById('convBox'),destGrid=document.getElementByI
 const btnConv=document.getElementById('btnConv'),progWrap=document.getElementById('progWrap');
 const progFill=document.getElementById('progFill'),progTxt=document.getElementById('progTxt');
 const resultBox=document.getElementById('resultBox'),resMsg=document.getElementById('resMsg');
-const dlBtn=document.getElementById('dlBtn'),histSec=document.getElementById('histSec');
+const dlBtn=document.getElementById('dlBtn');
 let selDest=null,curFile=null;
 
 drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('drag')});
@@ -139,12 +134,12 @@ function handleFile(f){
   convBox.style.display='block';resultBox.style.display='none';progWrap.style.display='none';
 }
 
-function filterCat(c){/* placeholder para futuras mejoras */}
+function fmtSize(b){if(b<1024)return b+' B';if(b<1048576)return(b/1024).toFixed(1)+' KB';return(b/1048576).toFixed(1)+' MB'}
 
 btnConv.addEventListener('click',()=>{
   if(!curFile||!selDest)return;
   btnConv.disabled=true;convBox.style.opacity='.6';
-  progWrap.style.display='block';progFill.style.width='0%';progTxt.textContent='Subiendo y convirtiendo…';
+  progWrap.style.display='block';progFill.style.width='0%';progTxt.textContent='Procesando…';
   resultBox.style.display='none';
 
   const fd=new FormData();fd.append('archivo',curFile);fd.append('destino',selDest);
@@ -155,11 +150,11 @@ btnConv.addEventListener('click',()=>{
       convBox.style.opacity='1';btnConv.disabled=false;
       if(d.ok){
         resultBox.className='result ok';resMsg.innerHTML='✅ <strong>'+d.origen+'</strong> convertido correctamente.';
-        dlBtn.href=d.file.replace('/var/www/html/WEB/conversor/uploads','');dlBtn.hidden=false;
+        dlBtn.href=d.url;dlBtn.hidden=false;
       }else{
         resultBox.className='result err';resMsg.textContent='❌ '+d.error;dlBtn.hidden=true;
       }
-      resultBox.style.display='block';loadHist();
+      resultBox.style.display='block';loadBib();
     })
     .catch(e=>{
       progFill.style.width='100%';progTxt.textContent='Error de conexión';
@@ -169,21 +164,24 @@ btnConv.addEventListener('click',()=>{
     });
 });
 
-function loadHist(){
-  fetch('api.php?action=historial').then(r=>r.json()).then(d=>{
-    if(!d.ok||!d.data.length)return;
-    histSec.style.display='block';
-    const tb=document.getElementById('histBody');tb.innerHTML='';
+function loadBib(){
+  fetch('api.php?action=biblioteca').then(r=>r.json()).then(d=>{
+    if(!d.ok)return;
+    const tb=document.getElementById('bibBody');tb.innerHTML='';
+    if(!d.data.length){tb.innerHTML='<tr><td colspan="4" class="empty">Sin archivos generados todavía.</td></tr>';return}
     d.data.forEach(row=>{
       const tr=document.createElement('tr');
-      tr.innerHTML='<td><span class="'+(row.exito?'dot-ok':'dot-err')+'"></span></td><td>'+row.origen+'</td><td>'+row.destino+'</td><td>'+row.fecha+'</td>';
+      const dlA=document.createElement('a');dlA.className='btn-sm btn-dl';dlA.href='api.php?action=descargar&file='+encodeURIComponent(row.name);dlA.textContent='⬇️ Descargar';
+      const delB=document.createElement('button');delB.className='btn-sm btn-del';delB.textContent='🗑️ Eliminar';
+      delB.onclick=()=>{if(!confirm('¿Eliminar '+row.name+'?'))return;fetch('api.php?action=eliminar&file='+encodeURIComponent(row.name)).then(r=>r.json()).then(x=>{if(x.ok)loadBib()})};
+      tr.innerHTML='<td>'+row.name+'</td><td>'+fmtSize(row.size)+'</td><td>'+row.fecha+'</td>';
+      const tdA=document.createElement('td');tdA.className='bib-actions';tdA.appendChild(dlA);tdA.appendChild(delB);tr.appendChild(tdA);
       tb.appendChild(tr);
     });
   }).catch(()=>{});
 }
 
-// Cargar historial al iniciar
-setTimeout(loadHist,1500);
+setTimeout(loadBib,1500);
 </script>
 </body>
 </html>

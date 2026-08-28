@@ -229,7 +229,8 @@ if ($method === 'POST') {
         db_log($ip,$name,$dstExt,1);
         // Borrar origen (ya no se necesita)
         @unlink($dest);
-        echo json_encode(['ok'=>true,'file'=>$res['file'],'origen'=>$name]);
+        $url = '/WEB/conversor/uploads/' . basename($res['file']);
+        echo json_encode(['ok'=>true,'file'=>$res['file'],'url'=>$url,'origen'=>$name]);
     } else {
         db_log($ip,$name,$dstExt,0,$res['error']);
         @unlink($dest);
