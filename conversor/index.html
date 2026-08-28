@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>NEXUS · Conversor Multiusos</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a1a;--card:rgba(255,255,255,.06);--border:rgba(255,255,255,.12);--accent:#7c3aed;--accent2:#06b6d4;--text:#e2e8f0;--muted:#94a3b8;--ok:#22c55e;--err:#ef4444}
+body{min-height:100vh;background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;padding:1.5rem 1rem;display:flex;flex-direction:column;align-items:center}
+body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(ellipse at 30% 50%,rgba(124,58,237,.1) 0%,transparent 60%),radial-gradient(ellipse at 70% 30%,rgba(6,182,212,.06) 0%,transparent 50%);animation:drift 20s ease-in-out infinite alternate;pointer-events:none;z-index:0}
+@keyframes drift{to{transform:translate(5%,3%) rotate(2deg)}}
+.grid-bg{position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:60px 60px;z-index:0;pointer-events:none}
+a{color:var(--accent2)}
+h1{font-size:clamp(1.8rem,4vw,2.6rem);font-weight:800;background:linear-gradient(135deg,#fff 30%,var(--accent) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.3rem;text-align:center}
+.sub{color:var(--muted);text-align:center;margin-bottom:2rem;font-size:.95rem}
+.back{display:inline-flex;align-items:center;gap:.4rem;color:var(--accent2);font-size:.85rem;margin-bottom:1.2rem;text-decoration:none;transition:opacity .3s}.back:hover{opacity:.7}
+
+.drop{width:100%;max-width:640px;border:2px dashed var(--border);border-radius:18px;padding:2.5rem 1.5rem;text-align:center;cursor:pointer;transition:border-color .3s,background .3s;background:var(--card)}
+.drop.drag{border-color:var(--accent);background:rgba(124,58,237,.08)}
+.drop p{color:var(--muted);font-size:.9rem;margin-top:.6rem}
+.drop .icon-big{font-size:3rem;display:block;margin-bottom:.5rem}
+
+.conv-box{width:100%;max-width:640px;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:1.5rem;margin-top:1.2rem;display:none;animation:fadeUp .4s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.conv-row{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap;margin-bottom:1rem}
+.badge{padding:.35rem .7rem;border-radius:8px;font-size:.82rem;font-weight:600;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.3)}
+.badge.dest{background:rgba(6,182,212,.15);border-color:rgba(6,182,212,.3)}
+.arrow-anim{font-size:1.3rem;animation:pulse 1s ease infinite alternate}
+@keyframes pulse{to{transform:translateX(4px)}}
+
+.dest-grid{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.8rem}
+.dest-btn{padding:.45rem .9rem;border-radius:10px;font-size:.82rem;font-weight:600;background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--text);cursor:pointer;transition:all .2s}
+.dest-btn:hover{background:rgba(124,58,237,.15);border-color:var(--accent)}
+.dest-btn.sel{background:rgba(6,182,212,.15);border-color:var(--accent2);color:var(--accent2)}
+
+.btn-conv{width:100%;padding:.9rem;border-radius:14px;font-size:1rem;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;cursor:pointer;margin-top:1rem;transition:transform .2s,box-shadow .2s}
+.btn-conv:hover{transform:translateY(-2px);box-shadow:0 8px 24px -6px rgba(124,58,237,.4)}
+.btn-conv:disabled{opacity:.5;cursor:not-allowed}
+
+.prog-wrap{width:100%;max-width:640px;margin-top:1rem;display:none}
+.prog-bar{height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .4s;border-radius:3px}
+.prog-txt{text-align:center;margin-top:.5rem;font-size:.85rem;color:var(--muted)}
+
+.result{width:100%;max-width:640px;margin-top:1.2rem;display:none;animation:fadeUp .4s ease both;border-radius:18px}
+.result.ok{border:1px solid rgba(34,197,94,.3);background:rgba(34,197,94,.05)}
+.result.err{border:1px solid rgba(239,68,68,.3);background:rgba(239,68,68,.05)}
+.result .msg{padding:1rem;font-size:.9rem;line-height:1.5}
+.dl-btn{display:inline-flex;align-items:center;gap:.4rem;padding:.7rem 1.4rem;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;text-decoration:none;font-weight:600;margin-top:.8rem}
+
+.hist{width:100%;max-width:640px;margin-top:2rem}
+.hist h3{font-size:1rem;color:var(--muted);margin-bottom:.8rem;display:flex;align-items:center;gap:.5rem}
+.hist-table{width:100%;border-collapse:collapse;font-size:.82rem}
+.hist-table th{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--border);color:var(--muted)}
+.hist-table td{padding:.45rem .6rem;border-bottom:1px solid rgba(255,255,255,.04)}
+.dot-ok{width:8px;height:8px;border-radius:50%;background:var(--ok);display:inline-block}
+.dot-err{width:8px;height:8px;border-radius:50%;background:var(--err);display:inline-block}
+
+.cats{display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1.2rem;justify-content:center}
+.cat-btn{padding:.4rem .9rem;border-radius:8px;font-size:.8rem;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:all .2s}
+.cat-btn:hover{background:rgba(124,58,237,.1);color:var(--text)}
+
+@media(max-width:480px){.drop{padding:1.5rem 1rem}.dest-grid{gap:.4rem}}
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+
+<a href="../index.html" class="back">← Volver al Portal</a>
+<h1>🔄 Conversor Multiusos</h1>
+<p class="sub">Convierte documentos, imágenes y multimedia. Arrastra tu archivo para empezar.</p>
+
+<div class="cats">
+  <button class="cat-btn" onclick="filterCat('doc')">📄 Documentos</button>
+  <button class="cat-btn" onclick="filterCat('img')">🖼️ Imágenes</button>
+  <button class="cat-btn" onclick="filterCat('av')">🎬 Audio / Video</button>
+</div>
+
+<div class="drop" id="drop">
+  <span class="icon-big">📂</span>
+  <p><strong>Arrastra y suelta tu archivo aquí</strong></p>
+  <p>o haz clic para seleccionar · Máx. 200 MB</p>
+  <input type="file" id="fileInput" hidden>
+</div>
+
+<div class="conv-box" id="convBox">
+  <div class="conv-row">
+    <span class="badge" id="bOrigen"></span>
+    <span class="arrow-anim">→</span>
+    <span class="badge dest" id="bDestino">?</span>
+  </div>
+  <div class="dest-grid" id="destGrid"></div>
+  <button class="btn-conv" id="btnConv" disabled>⚡ Convertir archivo</button>
+</div>
+
+<div class="prog-wrap" id="progWrap">
+  <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+  <p class="prog-txt" id="progTxt">Procesando…</p>
+</div>
+
+<div class="result" id="resultBox">
+  <div class="msg" id="resMsg"></div>
+  <a class="dl-btn" id="dlBtn" hidden download>⬇️ Descargar archivo</a>
+</div>
+
+<div class="hist" id="histSec" style="display:none">
+  <h3>📋 Historial reciente</h3>
+  <table class="hist-table"><thead><tr><th></th><th>Archivo</th><th>→</th><th>Fecha</th></tr></thead><tbody id="histBody"></tbody></table>
+</div>
+
+<script>
+const MAPA={txt:['pdf','docx','odt','html'],md:['pdf','docx','odt','html'],csv:['xlsx','ods','pdf','html'],html:['pdf','docx','odt','txt'],htm:['pdf','docx','odt','txt'],rtf:['pdf','docx','odt','txt'],doc:['pdf','docx','odt','txt','html'],docx:['pdf','odt','txt','html','rtf'],odt:['pdf','docx','txt','html'],xls:['xlsx','csv','ods','pdf'],xlsx:['csv','ods','pdf','xls'],ods:['xlsx','csv','pdf'],ppt:['pdf','png'],pptx:['pdf','png'],odp:['pdf','png'],jpg:['jpeg','png','webp','bmp','gif','tiff','ico','svg','pdf'],jpeg:['jpg','png','webp','bmp','gif','tiff','ico','svg','pdf'],png:['jpg','jpeg','webp','bmp','gif','tiff','ico','svg','pdf'],gif:['mp4','webm','png','jpg','apng'],webp:['png','jpg','jpeg','gif','bmp'],bmp:['png','jpg','jpeg','webp','gif'],tif:['png','jpg','jpeg','webp','tiff'],tiff:['png','jpg','jpeg','webp','tif'],ico:['png','jpg','svg'],svg:['png','jpg','jpeg','gif','bmp','pdf'],pdf:['png','jpg','txt','docx'],mp3:['wav','ogg','flac','m4a','aac','opus','wma'],wav:['mp3','ogg','flac','m4a','aac','opus'],ogg:['mp3','wav','flac','m4a','aac','opus'],flac:['mp3','wav','ogg','m4a','aac'],m4a:['mp3','wav','ogg','flac','aac'],aac:['mp3','wav','m4a','ogg'],wma:['mp3','wav','m4a','ogg'],opus:['mp3','wav','ogg','flac','m4a'],mp4:['avi','mkv','mov','webm','wmv','flv','ts','gif','mp3','wav','m4a'],avi:['mp4','mkv','mov','webm','wmv','flv'],mkv:['mp4','avi','mov','webm','mp3','wav'],mov:['mp4','avi','mkv','webm','gif'],wmv:['mp4','avi','mkv','mov'],flv:['mp4','avi','mkv','mov','webm'],ts:['mp4','mkv','avi','mov'],m4v:['mp4','avi','mkv','mov']};
+
+const drop=document.getElementById('drop'),fileInput=document.getElementById('fileInput');
+const convBox=document.getElementById('convBox'),destGrid=document.getElementById('destGrid');
+const btnConv=document.getElementById('btnConv'),progWrap=document.getElementById('progWrap');
+const progFill=document.getElementById('progFill'),progTxt=document.getElementById('progTxt');
+const resultBox=document.getElementById('resultBox'),resMsg=document.getElementById('resMsg');
+const dlBtn=document.getElementById('dlBtn'),histSec=document.getElementById('histSec');
+let selDest=null,curFile=null;
+
+drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('drag')});
+drop.addEventListener('dragleave',()=>drop.classList.remove('drag'));
+drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('drag');if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0])});
+drop.addEventListener('click',()=>fileInput.click());
+fileInput.addEventListener('change',e=>{if(e.target.files[0])handleFile(e.target.files[0])});
+
+function handleFile(f){
+  const ext=f.name.split('.').pop().toLowerCase();
+  if(!MAPA[ext]){alert('Formato no soportado: .'+ext);return}
+  curFile=f;
+  document.getElementById('bOrigen').textContent='📄 '+f.name;
+  destGrid.innerHTML='';selDest=null;btnConv.disabled=true;
+  MAPA[ext].forEach(d=>{
+    const b=document.createElement('button');b.className='dest-btn';b.textContent=d.toUpperCase();
+    b.onclick=()=>{document.querySelectorAll('.dest-btn').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');selDest=d;btnConv.disabled=false};
+    destGrid.appendChild(b);
+  });
+  convBox.style.display='block';resultBox.style.display='none';progWrap.style.display='none';
+}
+
+function filterCat(c){/* placeholder para futuras mejoras */}
+
+btnConv.addEventListener('click',()=>{
+  if(!curFile||!selDest)return;
+  btnConv.disabled=true;convBox.style.opacity='.6';
+  progWrap.style.display='block';progFill.style.width='0%';progTxt.textContent='Subiendo y convirtiendo…';
+  resultBox.style.display='none';
+
+  const fd=new FormData();fd.append('archivo',curFile);fd.append('destino',selDest);
+  fetch('api.php',{method:'POST',body:fd})
+    .then(r=>r.json())
+    .then(d=>{
+      progFill.style.width='100%';progTxt.textContent='¡Completado!';
+      convBox.style.opacity='1';btnConv.disabled=false;
+      if(d.ok){
+        resultBox.className='result ok';resMsg.innerHTML='✅ <strong>'+d.origen+'</strong> convertido correctamente.';
+        dlBtn.href=d.file.replace('/var/www/html/WEB/conversor/uploads','');dlBtn.hidden=false;
+      }else{
+        resultBox.className='result err';resMsg.textContent='❌ '+d.error;dlBtn.hidden=true;
+      }
+      resultBox.style.display='block';loadHist();
+    })
+    .catch(e=>{
+      progFill.style.width='100%';progTxt.textContent='Error de conexión';
+      convBox.style.opacity='1';btnConv.disabled=false;
+      resultBox.className='result err';resMsg.textContent='❌ Error: '+e.message;
+      resultBox.style.display='block';
+    });
+});
+
+function loadHist(){
+  fetch('api.php?action=historial').then(r=>r.json()).then(d=>{
+    if(!d.ok||!d.data.length)return;
+    histSec.style.display='block';
+    const tb=document.getElementById('histBody');tb.innerHTML='';
+    d.data.forEach(row=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML='<td><span class="'+(row.exito?'dot-ok':'dot-err')+'"></span></td><td>'+row.origen+'</td><td>'+row.destino+'</td><td>'+row.fecha+'</td>';
+      tb.appendChild(tr);
+    });
+  }).catch(()=>{});
+}
+
+// Cargar historial al iniciar
+setTimeout(loadHist,1500);
+</script>
+</body>
+</html>
