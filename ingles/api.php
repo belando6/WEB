@@ -108,6 +108,38 @@ case 'fallos_update':
     echo json_encode(['ok'=>true]);
     break;
 
+
+case 'file_upload':
+    $maxSize = 10 * 1024 * 1024; // 10 MB
+    if (!isset($_FILES['archivo']) || $_FILES['archivo']['error'] !== UPLOAD_ERR_OK) {
+        echo json_encode(['ok'=>false,'msg'=>'Error de subida']); break;
+    }
+    $f = $_FILES['archivo'];
+    if ($f['size'] > $maxSize) {
+        echo json_encode(['ok'=>false,'msg'=>'Máx. 10 MB']); break;
+    }
+    $ext = strtolower(pathinfo($f['name'], PATHINFO_EXTENSION));
+    if (!in_array($ext, ['pdf','txt'])) {
+        echo json_encode(['ok'=>false,'msg'=>'Solo PDF o TXT']); break;
+    }
+    $safeName = date('Ymd_His') . '_' . preg_replace('/[^a-zA-Z0-9_\-]/', '_', pathinfo($f['name'], PATHINFO_FILENAME)) . '.' . $ext;
+    $dest = __DIR__ . '/data/uploads/' . $safeName;
+    if (move_uploaded_file($f['tmp_name'], $dest)) {
+        echo json_encode(['ok'=>true,'filename'=>$safeName]);
+    } else {
+        echo json_encode(['ok'=>false,'msg'=>'No se pudo guardar']);
+    }
+    break;
+
+
+case 'listening_update':
+    $d = json_decode(file_get_contents('php://input'), true);
+    getDB()->prepare("UPDATE listening SET canal=?, titulo=?, url=?, pdf=? WHERE id=?")
+        ->execute([$d['canal'], $d['titulo'], $d['url'], $d['pdf'] ?? null, $d['id']]);
+    echo json_encode(['ok'=>true]);
+    break;
+
+
 default:
     echo json_encode(['error'=>'unknown action']);
 }

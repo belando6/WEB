@@ -1,0 +1,688 @@
+## VICTRON MQTT ENTITIES
+
+mqtt:
+  number:
+    - name: "Victron Charge Amperage"
+      unique_id: "e290e15e-5914-4ee9-a141-eddbb04ec1b2"
+      command_topic: "victron/W/c0619ab780de/vebus/276/Ac/ActiveIn/CurrentLimit"
+      command_template: '{"value": {{ value | float }} }'
+      state_topic: "victron/N/c0619ab780de/vebus/276/Ac/ActiveIn/CurrentLimit"
+      value_template: "{{ value_json.value }}"
+      min: 9.5
+      max: 30
+      step: 0.5
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+  switch:
+    #Inverter
+    - name: "Inverter"
+      unique_id: "d9ad8dd6-9acd-49df-8267-54454686185f"
+      state_topic: "victron/N/c0619ab780de/vebus/276/Mode"
+      command_topic: "victron/W/c0619ab780de/vebus/276/Mode"
+      state_on: '{"value": 3}'
+      state_off: '{"value": 4}'
+      payload_on: '{"value": 3}'
+      payload_off: '{"value": 4}'
+      optimistic: false
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+    #Relay 1 - Tablet Charge
+    - name: "Tablet Power"
+      unique_id: "0ea482e4-7e1c-419b-961d-d10f4257c4ec"
+      state_topic: "victron/N/c0619ab780de/system/0/Relay/0/State"
+      command_topic: "victron/W/c0619ab780de/system/0/Relay/0/State"
+      state_on: '{"value": 1}'
+      state_off: '{"value": 0}'
+      payload_on: '{"value": 1}'
+      payload_off: '{"value": 0}'
+      optimistic: false
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+    #Relay 2 - Wakespeed
+    - name: "Wakespeed Relay"
+      unique_id: "9bd7abe2-37ed-4e47-a51f-3e54de53b921"
+      state_topic: "victron/N/c0619ab780de/system/0/Relay/1/State"
+      command_topic: "victron/W/c0619ab780de/system/0/Relay/1/State"
+      state_on: '{"value": 1}'
+      state_off: '{"value": 0}'
+      payload_on: '{"value": 1}'
+      payload_off: '{"value": 0}'
+      optimistic: false
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+  sensor:
+    ## SYSTEM
+
+    #DC Load
+    - state_topic: "victron/N/c0619ab780de/system/0/Dc/System/Power"
+      name: "DC Consumption"
+      unique_id: 72325313-395b-4866-8fcd-c8b65096af64
+      icon: mdi:lightning-bolt
+      device_class: power
+      state_class: measurement
+      unit_of_measurement: "W"
+      value_template: '{{ value_json.value | round }}'
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+    #Inverter Mode
+    - state_topic: "victron/N/c0619ab780de/vebus/276/Mode"
+      name: "Inverter Mode"
+      unique_id: c6aaa910-76a3-4faf-8c9f-00feebb0245e
+      icon: mdi:generator-portable
+      value_template: >
+        {% if value_json.value == 1 %}
+          Charger Only
+        {% elif value_json.value == 2 %}
+          Inverter Only
+        {% elif value_json.value == 3 %}
+          On
+        {% elif value_json.value == 4 %}
+          Off
+        {% else %}
+          Error - No Data
+        {% endif %}
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+    #Inverter State
+    - state_topic: "victron/N/c0619ab780de/vebus/276/State"
+      unique_id: 23390d7b-ad47-4d3b-9f14-8e00b7fbea1f
+      icon: mdi:lightning-bolt
+      name: "Inverter State"
+      value_template: >
+        {% if value_json.value == 0 %}
+          Off
+        {% elif value_json.value == 1 %}
+          Low Power
+        {% elif value_json.value == 2 %}
+          Fault
+        {% elif value_json.value == 3 %}
+          Bulk
+        {% elif value_json.value == 4 %}
+          Absorption
+        {% elif value_json.value == 5 %}
+          Float
+        {% elif value_json.value == 6 %}
+          Storage
+        {% elif value_json.value == 7 %}
+          Equalize
+        {% elif value_json.value == 8 %}
+          Passthrough
+        {% elif value_json.value == 9 %}
+          Inverting
+        {% elif value_json.value == 10 %}
+          Power Assist
+        {% elif value_json.value == 11 %}
+          Power Supply
+        {% elif value_json.value == 244 %}
+          Sustain
+        {% elif value_json.value == 252 %}
+          External Control
+        {% else %}
+          Error - No Data
+        {% endif %}
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+    #Input AC Current Limit
+    - state_topic: "victron/N/c0619ab780de/vebus/276/Ac/In/1/CurrentLimit"
+      name: "Active Input Current Limit"
+      unique_id: 9bfbf09f-9344-43ae-941a-24f9584bb2a0
+      unit_of_measurement: "A"
+      device_class: current
+      value_template: '{{ value_json.value }}'
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+    #AC Consumption
+    - state_topic: "victron/N/c0619ab780de/system/0/Ac/Consumption/L1/Power"
+      name: "AC Consumption"
+      unique_id: 71b89126-3fcc-4070-8c33-ea99b4bdbfa2
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      value_template: '{{ value_json.value | float(0) | round }}'
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+    #Inverter Overload Alarm
+    - state_topic: "victron/N/c0619ab780de/vebus/276/Alarms/Overload"
+      name: "Inverter Overload Alarm"
+      unique_id: 271ce83f-43d5-4885-a6a1-d94e6952ba38
+      icon: mdi:alert
+      value_template: >
+        {% if value_json.value == 0 %}
+          No Alarm
+        {% elif value_json.value == 1 %}
+          Warning
+        {% elif value_json.value == 2 %}
+          Alarm
+        {% else %}
+          No Data
+        {% endif %}
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+    #Genset Load
+    - state_topic: "victron/N/c0619ab780de/system/0/Ac/Genset/L1/Power"
+      name: "Genset Load"
+      unique_id: 71a2b3e7-0ee1-45e3-b9bb-94a9a9d88451
+      icon: mdi:transmission-tower
+      unit_of_measurement: "W"
+      device_class: power
+      value_template: '{{ value_json.value | float(0) | round }}'
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+    #Shore Power
+    - state_topic: "victron/N/c0619ab780de/system/0/Ac/Grid/L1/Power"
+      name: "Shore Power"
+      unique_id: 9c70d9a4-08a9-4ec5-8274-0811e6b1bcac
+      icon: mdi:power-socket-us
+      unit_of_measurement: "W"
+      device_class: power
+      value_template: '{{ value_json.value | int(0) }}'
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+    ## BATTERIES
+
+    #SOC
+    - state_topic: "victron/N/c0619ab780de/system/0/Dc/Battery/Soc"
+      name: "Battery SoC"
+      unique_id: 963a9ae9-d333-4e6f-9c08-45f14750d203
+      icon: mdi:battery
+      unit_of_measurement: "%"
+      device_class: battery
+      value_template: '{{ value_json.value | float(0) | round }}'
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+    #Battery Voltage
+    - state_topic: "victron/N/c0619ab780de/battery/0/Dc/0/Voltage"
+      name: "Battery Voltage"
+      unique_id: 964eba87-5d2f-4bb2-8205-86e1b3066e1e
+      icon: mdi:flash-triangle
+      unit_of_measurement: "V"
+      device_class: voltage
+      value_template: '{{ value_json.value | float(0) | round(1) }}'
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+    
+    #Battery Current
+    - state_topic: "victron/N/c0619ab780de/battery/0/Dc/0/Current"
+      name: "Battery Current"
+      unique_id: 863ac196-c0cd-46c6-8f9e-14744e9c8104
+      icon: mdi:current-ac
+      unit_of_measurement: "A"
+      device_class: current
+      value_template: '{{ value_json.value | float(0) | round }}'
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+    #Battery Power
+    - state_topic: "victron/N/c0619ab780de/battery/0/Dc/0/Power"
+      name: "Battery Power"
+      unique_id: 5897aa8b-8346-414e-8c9e-c3248e65c426
+      icon: mdi:sine-wave
+      unit_of_measurement: "W"
+      device_class: power
+      value_template: '{{ value_json.value | float(0) | round }}'
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+    #Time to go
+    - state_topic: "victron/N/c0619ab780de/battery/0/TimeToGo"
+      name: "Time to go"
+      unique_id: af903bbd-f85b-405a-8bb6-7931456138df
+      icon: mdi:timer
+      value_template: >
+        {% if value_json.value is none %}
+          For Ever and Ever!
+        {% else %}
+          {% set total_seconds = value_json.value | int %}
+          {% set days = (total_seconds // 86400) %}
+          {% set hours = (total_seconds % 86400) // 3600 %}
+          {% set minutes = ((total_seconds % 3600) // 60) %}
+          {% if days >= 1 %}
+            {{ days }} day{{ 's' if days > 1 else '' }} {{ hours }} hour{{ 's' if hours != 1 else '' }}
+          {% elif hours >= 1 %}
+            {{ hours }} hour{{ 's' if hours != 1 else '' }} {{ minutes }} minute{{ 's' if minutes != 1 else '' }}
+          {% else %}
+            {{ minutes }} minute{{ 's' if minutes != 1 else '' }}
+          {% endif %}
+        {% endif %}
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+    #Auto Syncs - BMS syncs each time there is a full charge
+    - state_topic: "victron/N/c0619ab780de/battery/0/History/AutomaticSyncs"
+      name: "Automatic Syncs"
+      unique_id: ed05b92a-718d-47ed-884f-34e58fcb80e3
+      icon: mdi:sync
+      value_template: '{{ value_json.value }}'
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+
+    ## SOLAR
+
+    #Solar Voltage
+    - state_topic: "victron/N/c0619ab780de/solarcharger/279/Dc/0/Voltage"
+      name: "Solar Voltage"
+      unique_id: 727db9dd-3055-4144-963d-82c63206dbe4
+      icon: mdi:sine-wave
+      unit_of_measurement: "V"
+      device_class: voltage
+      value_template: '{{ value_json.value | round }}'
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+    #Solar Current
+    - state_topic: "victron/N/c0619ab780de/system/0/Dc/Pv/Current"
+      name: "Solar Current"
+      unique_id: 996a26c3-e768-4862-a99e-3e464ff6479c
+      icon: mdi:current-ac
+      unit_of_measurement: "A"
+      device_class: current
+      value_template: '{{ value_json.value | round }}'
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+    #Solar Power
+    - state_topic: "victron/N/c0619ab780de/system/0/Dc/Pv/Power"
+      name: "Solar Power"
+      unique_id: fde203c5-b53d-46a7-9b83-0a2caa5446c2
+      icon: mdi:lightning-bolt
+      unit_of_measurement: "W"
+      device_class: power
+      value_template: '{{ value_json.value | round }}'
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+    #Solar Yield Today
+    - state_topic: "victron/N/c0619ab780de/solarcharger/279/History/Daily/0/Yield"
+      name: "Solar Yield Today"
+      unique_id: 78b5afd9-5f35-44ba-a8de-c98f5d8f232b
+      icon: mdi:solar-power
+      unit_of_measurement: "kWh"
+      device_class: power
+      value_template: '{{ value_json.value | round(2) }}'
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+    #Solar Max Power Today
+    - state_topic: "victron/N/c0619ab780de/solarcharger/279/History/Daily/0/MaxPower"
+      name: "Solar Max Power Today"
+      unique_id: 91a03193-230b-452d-a265-93bf6411d80a
+      icon: mdi:lightning-bolt
+      unit_of_measurement: "W"
+      device_class: power
+      value_template: '{{ value_json.value | round }}'
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+    #Solar Yield Yesterday
+    - state_topic: "victron/N/c0619ab780de/solarcharger/279/History/Daily/1/Yield"
+      name: "Solar Yield Yesterday"
+      unique_id: 280202d7-584a-43ec-b1e7-16e65400036e
+      icon: mdi:solar-power
+      unit_of_measurement: "kWh"
+      device_class: power
+      value_template: '{{ value_json.value | round(2) }}'
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+    #Solar Max Power Yesterday
+    - state_topic: "victron/N/c0619ab780de/solarcharger/279/History/Daily/1/MaxPower"
+      name: "Solar Max Power Yesterday"
+      unique_id: 139aea9a-baa3-4a74-8bc4-143bce8b3315
+      icon: mdi:lightning-bolt
+      unit_of_measurement: "W"
+      device_class: power
+      value_template: '{{ value_json.value | round }}'
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+    ## ALTERNATOR
+
+    #Alternator Current
+    - state_topic: "victron/N/c0619ab780de/alternator/0/Dc/0/Current"
+      name: "Alternator Current"
+      unique_id: 64b9c7c6-07e6-4598-8fe3-e3e8958b934e
+      icon: mdi:current-ac
+      device_class: current
+      unit_of_measurement: "A"
+      value_template: '{{ value_json.value | round }}'
+      expire_after: 10
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+    #Alternator Power
+    - state_topic: "victron/N/c0619ab780de/alternator/0/Dc/0/Power"
+      name: "Alternator Power"
+      unique_id: 92030444-417d-409e-884a-0300c1a3b34c
+      icon: mdi:sine-wave
+      device_class: power
+      unit_of_measurement: "W"
+      value_template: '{{ value_json.value | round }}'
+      expire_after: 10
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+    
+    #Alternator Field Drive
+    - state_topic: "victron/N/c0619ab780de/alternator/0/FieldDrive"
+      name: "Alternator Field Drive"
+      unique_id: d01b0d2a-8bf3-46bb-9a0a-80bd74252f70
+      icon: mdi:percent
+      device_class: power_factor
+      unit_of_measurement: "%"
+      value_template: '{{ value_json.value }}'
+      # expire_after: 10
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+    #Alternator State
+    - state_topic: "victron/N/c0619ab780de/alternator/0/State"
+      name: "Alternator State"
+      unique_id: 14f23968-94ef-458b-b606-5f2602876bb8
+      icon: mdi:turbine
+      value_template: '{{ value_json.value }}'
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+    #Alternator Temp
+    - state_topic: "victron/N/c0619ab780de/alternator/0/Dc/0/Temperature"
+      name: "Alternator Temperature"
+      unique_id: dd4cf07a-4c43-47e3-8588-0e6859d18b78
+      icon: mdi:thermometer
+      device_class: temperature
+      unit_of_measurement: "°C"
+      value_template: '{{ value_json.value }}'
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+    ## TANKS
+
+    #Primary Water Tank
+    - state_topic: "victron/N/c0619ab780de/tank/20/Level"
+      name: "Primary Water Tank"
+      unique_id: a88743cd-6acb-4bbc-83ce-5f5ffeb0d412
+      icon: mdi:water-percent
+      device_class: humidity
+      unit_of_measurement: "%"
+      value_template: '{{ value_json.value }}'
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+    #Primary Water Tank Volume
+    - state_topic: "victron/N/c0619ab780de/tank/20/Remaining"
+      name: "Primary Water Tank Volume"
+      unique_id: "655ef1f9-04e2-4c28-b727-75fe99732597"
+      icon: mdi:car-coolant-level
+      device_class: volume_storage
+      unit_of_measurement: "gal"
+      value_template: '{{ (value_json.value * 264.2) | round(1) }}'
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+    #Aux Water Tank
+    - state_topic: "victron/N/c0619ab780de/tank/21/Level"
+      name: "Auxiliary Water Tank"
+      unique_id: aedce0ec-3f95-4398-9d6c-a7be83f14cdd
+      icon: mdi:water-percent
+      device_class: humidity
+      unit_of_measurement: "%"
+      value_template: '{{ value_json.value }}'
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+    #Aux Water Tank Volume
+    - state_topic: "victron/N/c0619ab780de/tank/21/Remaining"
+      name: "Auxiliary Water Tank Volume"
+      unique_id: "c862cb06-4516-4649-b1e6-3ea891ca2cc0"
+      icon: mdi:car-coolant-level
+      device_class: volume_storage
+      unit_of_measurement: "gal"
+      value_template: '{{ (value_json.value * 264.2) | round(1) }}'
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+    #Grey Tank
+    - state_topic: "victron/N/c0619ab780de/tank/22/Level"
+      name: "Grey Tank Float"
+      unique_id: b0f6588f-c904-4529-94ca-c9e8c73ace34
+      icon: mdi:water-percent
+      device_class: humidity
+      unit_of_measurement: "%"
+      value_template: '{{ value_json.value }}'
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+    #Grey Tank Volume
+    - state_topic: "victron/N/c0619ab780de/tank/22/Remaining"
+      name: "Grey Tank Float Volume"
+      unique_id: abc439c2-dc7d-4b54-8d59-ac1a4b0c3b4a
+      icon: mdi:car-coolant-level
+      device_class: volume_storage
+      unit_of_measurement: "gal"
+      value_template: '{{ (value_json.value * 264.2) | round(1) }}'
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+    #Grey Tank Bluetooth Sensor
+    - state_topic: "victron/N/c0619ab780de/tank/24/Level"
+      name: "Grey Tank"
+      unique_id: eb2ac5ca-49dc-4d6c-accc-b8d3e25a2520
+      icon: mdi:water-percent
+      device_class: humidity
+      unit_of_measurement: "%"
+      value_template: '{{ value_json.value }}'
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}
+
+    #Grey Tank Bluetooth Sensor Temp
+    - state_topic: "victron/N/c0619ab780de/tank/24/Temperature"
+      name: "Grey Tank Temperature"
+      unique_id: 9ef0e6a6-2e2d-491e-ad53-f9366a9e64e4
+      icon: mdi:thermometer
+      device_class: temperature
+      unit_of_measurement: "°C"
+      value_template: '{{ value_json.value }}'
+      device: {
+        identifiers: [
+          "Cerbo GX"
+        ],
+        manufacturer: "Victron Energy",
+        model: "Cerbo GX",
+        name: "Cerbo GX"}

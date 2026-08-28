@@ -102,7 +102,7 @@ th{color:var(--accent)}
 <button class="btn btn-primary back-btn" onclick="showMenu()">&larr; Volver al men&#x00fa;</button>
 <h3 style="color:var(--accent);margin-bottom:16px">&#x1F3A7; Listening - <span id="listenNivel"></span></h3>
 <div class="card">
-<button class="btn btn-primary" onclick="formularioListening()">&#x2795; A&#x00f1;adir Audio/PDF</button>
+<button class="btn btn-primary" onclick="formularioListening()">&#x2795; A&#x00f1;adir Listening</button>
 <button class="btn btn-success" onclick="listarListening()">&#x1F4C2; Ver/Modificar Audios</button>
 <button class="btn btn-warn" onclick="practicarListening()">&#x1F3AF; Practicar Listening</button>
 </div>
@@ -313,13 +313,13 @@ async function eliminarPalabra(id){
 // ===== LISTENING =====
 function formularioListening(){
   const area=document.getElementById('listenArea');
-  area.innerHTML='<div class="card"><h3>\u2795 A\u00f1adir Audio/PDF</h3>'+
+  area.innerHTML='<div class="card"><h3>\u2795 A\u00f1adir Listening</h3>'+
     '<div class="form-grid">'+
     '<div><label>Canal de YouTube</label><input id="lCanal"></div>'+
     '<div><label>T\u00edtulo del Audio</label><input id="lTitulo"></div>'+
     '</div>'+
     '<label>URL de YouTube</label><input id="lUrl" placeholder="https://youtube.com/...">'+
-    '<label>Ruta PDF (opcional)</label><input id="lPdf" placeholder="(opcional)">'+
+    '<label>Archivo PDF/TXT (opcional)</label><input type="file" id="lPdfFile" accept=".pdf,.txt"><span id="lPdfName" style="font-size:.85rem;color:var(--muted);display:block;margin-top:4px"></span>'+
     '<button class="btn btn-primary" onclick="guardarListening()">&#x1F4BE; Guardar y A\u00f1adir Preguntas</button></div>';
 }
 
@@ -327,7 +327,14 @@ async function guardarListening(){
   const canal=document.getElementById('lCanal').value.trim();
   const titulo=document.getElementById('lTitulo').value.trim();
   const url=document.getElementById('lUrl').value.trim();
-  const pdf=document.getElementById('lPdf').value.trim();
+  let pdf='';
+  const fileInput=document.getElementById('lPdfFile');
+  if(fileInput.files.length){
+    const fd=new FormData();fd.append('archivo',fileInput.files[0]);
+    const r=await fetch(API+'?action=file_upload',{method:'POST',body:fd});
+    const j=await r.json();
+    if(j.ok)pdf=j.filename;else{toast('\u26a0 '+j.msg);return}
+  }
   if(!canal||!titulo||!url){toast('\u26a0 Rellena canal, t\u00edtulo y URL');return}
   const r=await api('listening_add',{nivel:nivel,canal:canal,titulo:titulo,url:url,pdf:pdf});
   toast(r.ok?'\u2705 Audio a\u00f1adido. Ahora a\u00f1ade las preguntas':'Error');
@@ -366,8 +373,11 @@ async function listarListening(){
   if(!r.length){area.innerHTML='<div class="card"><p style="color:var(--muted)">No hay audios guardados.</p></div>';return}
   let html='<div class="card"><h3>\u{1F4C2} Listening Audios - '+nivel+'</h3><table><tr><th>T\u00edtulo</th><th>Canal</th><th>Fallos</th><th>Acciones</th></tr>';
   r.forEach(a=>{
+    const pdfArg=a.pdf?"'"+a.pdf.replace(/'/g,"\\'")+"'": "''";
     html+='<tr><td>'+a.titulo+'</td><td>'+a.canal+'</td><td>'+a.fallos+'</td>'+
       '<td><button class="btn btn-primary" onclick="verPreguntas('+a.id+',\''+a.titulo.replace(/'/g,"\\'")+'\')">&#x1F4DD; Preguntas</button> '+
+      (a.pdf?'<button class="btn btn-warn" onclick="verArchivo(\''+a.pdf+'\')">\u{1F4C4} Archivo</button> ':'')+
+      '<button class="btn btn-warn" onclick="modificarListening('+a.id+',\''+a.canal.replace(/'/g,"\\'")+'\',\''+a.titulo.replace(/'/g,"\\'")+'\',\''+a.url.replace(/'/g,"\\'")+'\','+pdfArg+')">\u270F Modificar</button> '+
       '<button class="btn btn-danger" onclick="eliminarListening('+a.id+')">\u2715</button></td></tr>';
   });
   html+='</table></div>';
@@ -434,6 +444,46 @@ async function corregirListening(lid){
   let msg='Fallos: '+fallos+' de '+_todas.length;
   if(detalle.length)msg+='\nErrores en:\n'+detalle.join('\n');
   toast(msg);practicarListening();
+}
+
+async function verArchivo(filename){
+  const ext=filename.split('.').pop().toLowerCase();
+  if(ext==='pdf'){window.open('data/uploads/'+encodeURIComponent(filename),'_blank');return}
+  // TXT: mostrar en modal
+  const r=await fetch('data/uploads/'+encodeURIComponent(filename));
+  const txt=await r.text();
+  let m=document.createElement('div');m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  m.innerHTML='<div style="background:var(--card);border-radius:12px;max-width:80vw;max-height:85vh;overflow:auto;padding:24px"><h3>\u{1F4C4} '+filename+'</h3><pre style="white-space:pre-wrap;font-size:.9rem;color:var(--text);margin-top:12px">'+txt.replace(/</g,'&lt;')+'</pre><br><button class="btn btn-danger" onclick="this.parentElement.parentElement.remove()">Cerrar</button></div>';
+  document.body.appendChild(m);
+}
+
+async function modificarListening(id,canal,titulo,url,pdf){
+  let html='<div class="card"><h3>\u270F Modificar Audio</h3>'+
+    '<label>Canal</label><input id="mCanal" value="'+canal+'">'+
+    '<label>T\u00edtulo</label><input id="mTitulo" value="'+titulo+'">'+
+    '<label>URL de YouTube</label><input id="mUrl" value="'+url+'">'+
+    '<label>Reemplazar archivo (opcional)</label><input type="file" id="mPdfFile" accept=".pdf,.txt">'+
+    (pdf?'<p style="font-size:.85rem;color:var(--muted)">Archivo actual: '+pdf+'</p>':'')+
+    '<button class="btn btn-primary" onclick="guardarModificacion('+id+')">\u2705 Guardar cambios</button>'+
+    '<button class="btn btn-danger" onclick="listarListening()">Cancelar</button></div>';
+  document.getElementById('listenArea').innerHTML=html;
+}
+
+async function guardarModificacion(id){
+  const canal=document.getElementById('mCanal').value.trim();
+  const titulo=document.getElementById('mTitulo').value.trim();
+  const url=document.getElementById('mUrl').value.trim();
+  if(!canal||!titulo||!url){toast('\u26a0 Rellena todos los campos');return}
+  let pdf='';
+  const fileInput=document.getElementById('mPdfFile');
+  if(fileInput.files.length){
+    const fd=new FormData();fd.append('archivo',fileInput.files[0]);
+    const r=await fetch(API+'?action=file_upload',{method:'POST',body:fd});
+    const j=await r.json();
+    if(j.ok)pdf=j.filename;else{toast('\u26a0 '+j.msg);return}
+  }
+  await api('listening_update',{id:id,canal:canal,titulo:titulo,url:url,pdf:pdf});
+  toast('\u2705 Audio actualizado');listarListening();
 }
 
 function toggleHelp(id){
