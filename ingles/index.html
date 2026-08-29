@@ -409,20 +409,36 @@ async function practicarListening(){
   const r=await api('listening_list',null,{nivel:nivel});
   const area=document.getElementById('listenArea');
   if(!r.length){area.innerHTML='<div class="card"><p style="color:var(--muted)">No hay audios para practicar.</p></div>';return}
+  window._listenUrls={};
   let html='<div class="card"><h3>\u{1F3AF} Practicar Listening - '+nivel+'</h3>';
   r.forEach(a=>{
+    window._listenUrls[a.id]=a.url;
     html+='<button class="btn btn-primary" style="display:block;width:100%;text-align:left;margin-bottom:8px" onclick="_ejercicioListening('+a.id+')">'+a.titulo+' ('+a.canal+') - \u00daltimos fallos: '+a.fallos+'</button>';
   });
   html+='<br><button class="btn btn-danger" onclick="listarListening()">&larr; Volver</button></div>';
   area.innerHTML=html;
 }
 
+function ytEmbed(url){
+  try{
+    const u=new URL(url);
+    if(u.hostname.includes('youtube.com')&&u.pathname==='/watch'){return 'https://www.youtube.com/embed/'+u.searchParams.get('v')}
+    if(u.hostname.includes('youtu.be')){return 'https://www.youtube.com/embed/'+u.pathname.slice(1)}
+    if(u.hostname.includes('youtube.com')&&u.pathname.startsWith('/embed/')){return url}
+  }catch(e){}
+  return url;
+}
+
 async function _ejercicioListening(lid){
+  const url=window._listenUrls[lid]||'';
   const partes=EXAM[nivel];let todas=[];
   let r=await api('preguntas_list',null,{listening_id:lid});
   r.forEach(p=>{todas.push(p)});
   if(!todas.length){toast('No hay preguntas para este audio');return}
-  let html='<div class="card"><h3>\u{1F3A7} Ejercicio Listening</h3>';
+  let html='<div class="card"><h3>\u{1F3A7} Ejercicio Listening</h3>'+
+    '<div style="position:relative;padding-bottom:56.25%;margin-bottom:16px;border-radius:8px;overflow:hidden">'+
+    '<iframe style="position:absolute;top:0;left:0;width:100%;height:100%" src="'+ytEmbed(url)+'" frameborder="0" allowfullscreen></iframe>'+
+    '</div>';
   todas.forEach((p,i)=>{
     html+='<div class="pregunta-row"><span class="pregunta-num">'+p.parte+'.'+p.num+'</span><input id="lr_'+i+'" placeholder="Tu respuesta..."></div>';
   });
@@ -434,16 +450,26 @@ async function _ejercicioListening(lid){
 
 async function corregirListening(lid){
   let fallos=0,detalle=[];
+  window._resultados=[];
   _todas.forEach((p,i)=>{
     const el=document.getElementById('lr_'+i);
     if(!el)return;
     const v=el.value.trim().toLowerCase();
-    if(v!==(p.respuesta||'').trim().toLowerCase()){fallos++;detalle.push('Parte '+p.parte+', Pregunta '+p.num)}
+    const validas=(p.respuesta||'').split(',').map(s=>s.trim().toLowerCase());
+    const ok=validas.includes(v);
+    window._resultados.push({parte:p.parte,num:p.num,ok:ok});
+    if(!ok){fallos++;detalle.push('Parte '+p.parte+', Pregunta '+p.num)}
   });
   await api('fallos_update',null,{id:lid,fallos:fallos});
-  let msg='Fallos: '+fallos+' de '+_todas.length;
-  if(detalle.length)msg+='\nErrores en:\n'+detalle.join('\n');
-  toast(msg);practicarListening();
+  let html='<div class="card"><h3>\u{1F4CB} Resultados</h3>';
+  window._resultados.forEach(r=>{
+    const color=r.ok?'#22c55e':'#ef4444';
+    const icono=r.ok?'\u2705':'\u274C';
+    html+='<div style="padding:6px 12px;margin:4px 0;border-radius:6px;background:'+color+'1a;color:'+color+';font-weight:600">'+icono+' Parte '+r.parte+', Pregunta '+r.num+'</div>';
+  });
+  html+='<p style="margin-top:12px;font-size:.9rem">Fallos: <b>'+fallos+'</b> de '+_todas.length+'</p>'+
+    '<button class="btn btn-primary" onclick="practicarListening()">\u{1F3AF} Volver a practicar</button></div>';
+  document.getElementById('listenArea').innerHTML=html;
 }
 
 async function verArchivo(filename){
@@ -458,14 +484,28 @@ async function verArchivo(filename){
 }
 
 async function modificarListening(id,canal,titulo,url,pdf){
+  const r=await api('preguntas_list',null,{listening_id:id});
   let html='<div class="card"><h3>\u270F Modificar Audio</h3>'+
     '<label>Canal</label><input id="mCanal" value="'+canal+'">'+
     '<label>T\u00edtulo</label><input id="mTitulo" value="'+titulo+'">'+
     '<label>URL de YouTube</label><input id="mUrl" value="'+url+'">'+
     '<label>Reemplazar archivo (opcional)</label><input type="file" id="mPdfFile" accept=".pdf,.txt">'+
     (pdf?'<p style="font-size:.85rem;color:var(--muted)">Archivo actual: '+pdf+'</p>':'')+
-    '<button class="btn btn-primary" onclick="guardarModificacion('+id+')">\u2705 Guardar cambios</button>'+
-    '<button class="btn btn-danger" onclick="listarListening()">Cancelar</button></div>';
+    '<hr style="margin:12px 0;border-color:#334155">'+
+    '<h4>Preguntas</h4>';
+  if(!r.length)html+='<p style="color:var(--muted);font-size:.85rem">Sin preguntas.</p>';
+  else{
+    let partes={};
+    r.forEach(p=>{(partes[p.parte]=partes[p.parte]||[]).push(p)});
+    for(const[parte,ps]of Object.entries(partes)){
+      html+='<div class="part-header">Parte '+parte+'</div>';
+      ps.forEach(p=>{
+        html+='<div class="pregunta-row"><span class="pregunta-num">'+parte+'.'+p.num+'</span><input id="mq_'+p.parte+'_'+p.num+'" value="'+(p.respuesta||'').replace(/"/g,'&quot;')+'" placeholder="Respuesta"></div>';
+      });
+    }
+  }
+  html+='<button class="btn btn-primary" onclick="guardarModificacion('+id+')">\u2705 Guardar cambios</button>'+
+    '<br><button class="btn btn-danger" onclick="listarListening()">Cancelar</button></div>';
   document.getElementById('listenArea').innerHTML=html;
 }
 
@@ -483,6 +523,13 @@ async function guardarModificacion(id){
     if(j.ok)pdf=j.filename;else{toast('\u26a0 '+j.msg);return}
   }
   await api('listening_update',{id:id,canal:canal,titulo:titulo,url:url,pdf:pdf});
+  // Guardar preguntas modificadas
+  let preguntas=[];
+  document.querySelectorAll('[id^="mq_"]').forEach(el=>{
+    const parts=el.id.replace('mq_','').split('_');
+    if(el.value.trim())preguntas.push({parte:+parts[0],num:+parts[1],respuesta:el.value.trim()});
+  });
+  if(preguntas.length)await api('preguntas_save',{listening_id:id,preguntas:preguntas});
   toast('\u2705 Audio actualizado');listarListening();
 }
 
