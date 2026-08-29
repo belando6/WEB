@@ -33,3 +33,7 @@ tmp/
 echo "##active_line20##"
 .cache/
 echo "##active_line21##"
+
+# Notion
+notion/uploads/*
+!notion/uploads/.gitkeep

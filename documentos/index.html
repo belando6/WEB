@@ -97,7 +97,7 @@ function renderList(){
   let html="";
   for(const f of files){
     const active=currentFile===f.name?"active":"";
-    const icon=f.ext==="md"?"&#128221;":"&#128196;";
+    const icons={md:'&#128221;',txt:'&#128196;',json:'&#128205;',js:'&#9889;',css:'&#127912;',png:'&#128444;',jpg:'&#128444;',gif:'&#128444;',svg:'&#128444;',pdf:'&#128196;',zip:'&#128230;',sh:'&#128187;'};const icon=icons[f.ext]||'&#128196;';
     html+="<div class='file-item "+active+"' data-file='"+f.name+"'>"
       +"<div class='file-info'><div class='file-icon'>"+icon+"</div>"
       +"<div><div class='file-name'>"+escHtml(f.name)+"</div><div class='file-meta'>"+fmtSize(f.size)+" \u00b7 "+f.lines+" l\u00edneas \u00b7 Mod: "+f.modified+"</div></div></div></div>";
