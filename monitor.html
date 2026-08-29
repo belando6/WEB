@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Monitor · NEXUS</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a1a;--card:rgba(255,255,255,.06);--border:rgba(255,255,255,.12);--accent:#7c3aed;--accent2:#06b6d4;--text:#e2e8f0;--muted:#94a3b8}
+body{min-height:100vh;background:var(--bg);color:var(--text);font-family:"Segoe UI",system-ui,sans-serif;padding:1.5rem 1rem;max-width:960px;margin:auto;line-height:1.5}
+a{color:var(--accent2)}
+.back{display:inline-flex;align-items:center;gap:.4rem;color:var(--accent2);text-decoration:none;font-size:.85rem;margin-bottom:1.2rem;padding:.35rem .7rem;border-radius:8px;background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.2)}
+.back:hover{background:rgba(6,182,212,.15)}
+h1{font-size:clamp(1.6rem,4vw,2.2rem);font-weight:800;background:linear-gradient(135deg,#fff 30%,var(--accent) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.3rem}
+.sub{color:var(--muted);margin-bottom:1.5rem;font-size:.9rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-bottom:1.2rem}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.3rem;animation:fadeUp .5s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.card h2{font-size:.95rem;font-weight:700;margin-bottom:.8rem;display:flex;align-items:center;gap:.4rem}
+.bar-wrap{background:rgba(255,255,255,.06);border-radius:6px;height:10px;overflow:hidden;margin-top:.5rem}
+.bar{height:100%;border-radius:6px;transition:width .8s ease;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.bar.ok{background:linear-gradient(90deg,#16a34a,#22c55e)}
+.bar.warn{background:linear-gradient(90deg,#ca8a04,#eab308)}
+.bar.crit{background:linear-gradient(90deg,#dc2626,#ef4444)}
+.metric-row{display:flex;justify-content:space-between;font-size:.85rem;margin-top:.4rem}
+.metric-row .val{font-weight:700;color:var(--accent2)}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.8rem}
+.kpi{text-align:center;padding:.8rem;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid var(--border)}
+.kpi .num{font-size:1.6rem;font-weight:800;color:var(--accent2)}
+.kpi .lbl{font-size:.72rem;color:var(--muted);margin-top:.2rem}
+table{width:100%;border-collapse:collapse;font-size:.82rem;margin-top:.5rem}
+th{text-align:left;color:var(--muted);font-weight:600;padding:.4rem .5rem;border-bottom:1px solid var(--border)}
+td{padding:.4rem .5rem;border-bottom:1px solid rgba(255,255,255,.05)}
+.rank-bar{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--accent2));margin-top:3px}
+.tag{display:inline-block;padding:.15rem .5rem;border-radius:4px;font-size:.7rem;font-weight:600}
+.tag.ok{background:rgba(34,197,94,.15);color:#22c55e}
+.tag.warn{background:rgba(234,179,8,.15);color:#eab308}
+.tag.crit{background:rgba(239,68,68,.15);color:#ef4444}
+.footer{text-align:center;color:var(--muted);font-size:.7rem;margin-top:1.5rem;padding-bottom:1rem}
+</style>
+</head>
+<body>
+
+<a href="index.html" class="back">← Volver al Portal</a>
+<h1>📡 Monitor del Servidor</h1>
+<p class="sub">Recursos, espacio, uso por módulo y métricas en tiempo real · NEXUS</p>
+
+<div class="kpi-grid" style="margin-bottom:1.2rem">
+  <div class="kpi"><div class="num" id="k-cpu">—</div><div class="lbl">CPU %</div></div>
+  <div class="kpi"><div class="num" id="k-ram">—</div><div class="lbl">RAM usada</div></div>
+  <div class="kpi"><div class="num" id="k-disk">—</div><div class="lbl">Disco / %</div></div>
+  <div class="kpi"><div class="num" id="k-up">—</div><div class="lbl">Uptime</div></div>
+  <div class="kpi"><div class="num" id="k-proc">—</div><div class="lbl">Procesos</div></div>
+  <div class="kpi"><div class="num" id="k-load">—</div><div class="lbl">Load avg</div></div>
+</div>
+
+<div class="grid">
+<div class="card">
+  <h2>⚙️ CPU</h2>
+  <div class="metric-row"><span>Núcleos</span><span class="val" id="cpu-cores">—</span></div>
+  <div class="bar-wrap"><div class="bar" id="cpu-bar" style="width:0%"></div></div>
+  <div class="metric-row"><span>Uso actual</span><span class="val" id="cpu-pct">—</span></div>
+  <div class="metric-row"><span>Load (1/5/15m)</span><span class="val" id="load-vals">—</span></div>
+</div>
+
+<div class="card">
+  <h2>🧠 Memoria</h2>
+  <div class="metric-row"><span>RAM total</span><span class="val" id="ram-total">—</span></div>
+  <div class="bar-wrap"><div class="bar ok" id="ram-bar" style="width:0%"></div></div>
+  <div class="metric-row"><span>Usada / %</span><span class="val" id="ram-used">—</span></div>
+  <div class="metric-row" style="margin-top:.8rem"><span>Swap total</span><span class="val" id="swap-total">—</span></div>
+  <div class="bar-wrap"><div class="bar warn" id="swap-bar" style="width:0%"></div></div>
+  <div class="metric-row"><span>Usada / %</span><span class="val" id="swap-used">—</span></div>
+</div>
+
+<div class="card">
+  <h2>💾 Espacio en disco</h2>
+  <table id="disk-table"><thead><tr><th>Punto montaje</th><th>Usado / Total</th><th>%</th></tr></thead><tbody></tbody></table>
+</div>
+
+<div class="card">
+  <h2>📊 Uso por módulo WEB (peticiones)</h2>
+  <table id="mod-table"><thead><tr><th>Módulo</th><th>Peticiones</th></tr></thead><tbody></tbody></table>
+</div>
+
+<div class="card">
+  <h2>🔝 Endpoints más solicitados</h2>
+  <table id="ep-table"><thead><tr><th>Ruta</th><th>Hits</th></tr></thead><tbody></tbody></table>
+</div>
+
+<div class="card">
+  <h2>🗄️ Bases de datos & Logs</h2>
+  <table id="db-table"><thead><tr><th>Archivo</th><th>Tamaño</th></tr></thead><tbody></tbody></table>
+  <div class="metric-row" style="margin-top:.8rem"><span>Nginx access.log</span><span class="val" id="log-size">—</span></div>
+  <div class="metric-row"><span>Último acceso log</span><span class="val" id="last-access">—</span></div>
+</div>
+</div>
+
+<div class="footer">NEXUS Monitor · Auto-refresh 10s · <span id="ts">—</span></div>
+
+<script>
+function fmtKB(kb){if(kb>=1048576)return (kb/1048576).toFixed(1)+" GB";if(kb>=1024)return (kb/1024).toFixed(1)+" MB";return kb+" KB"}
+function barClass(pct){if(pct<60)return"ok";if(pct<85)return"warn";return"crit"}
+
+async function refresh(){
+  try{
+    const r=await fetch("monitor_api.php");const j=await r.json();
+    document.getElementById("k-cpu").textContent=j.cpu.percent+"%";
+    document.getElementById("k-ram").textContent=(j.memory.used_mb/1024).toFixed(1)+" GB";
+    const d0=j.disk[0]||{};document.getElementById("k-disk").textContent=d0.percent+"%";
+    document.getElementById("k-up").textContent=j.uptime.days+"d "+j.uptime.time;
+    document.getElementById("k-proc").textContent=j.processes;
+    document.getElementById("k-load").textContent=j.loadavg[0].toFixed(2);
+
+    document.getElementById("cpu-cores").textContent=j.cpu.cores;
+    const cb=document.getElementById("cpu-bar");cb.style.width=j.cpu.percent+"%";cb.className="bar "+barClass(j.cpu.percent);
+    document.getElementById("cpu-pct").textContent=j.cpu.percent+"%";
+    document.getElementById("load-vals").textContent=j.loadavg.slice(0,3).map(v=>v.toFixed(2)).join(" / ");
+
+    document.getElementById("ram-total").textContent=(j.memory.total_mb/1024).toFixed(1)+" GB";
+    const rb=document.getElementById("ram-bar");rb.style.width=j.memory.percent+"%";rb.className="bar "+barClass(j.memory.percent);
+    document.getElementById("ram-used").textContent=(j.memory.used_mb/1024).toFixed(1)+" GB ("+j.memory.percent+"%)";
+
+    document.getElementById("swap-total").textContent=(j.swap.total_mb/1024).toFixed(1)+" GB";
+    const sb=document.getElementById("swap-bar");sb.style.width=j.swap.percent+"%";sb.className="bar "+barClass(j.swap.percent);
+    document.getElementById("swap-used").textContent=(j.swap.used_mb/1024).toFixed(1)+" GB ("+j.swap.percent+"%)";
+
+    const dt=document.querySelector("#disk-table tbody");dt.innerHTML="";
+    j.disk.forEach(d=>{const tr=dt.insertRow();tr.innerHTML="<td>"+d.mount+"</td><td>"+fmtKB(d.used_kb)+" / "+fmtKB(d.size_kb)+"</td><td><span class=\"tag "+barClass(d.percent)+"\">"+d.percent+"%</span></td>"});
+
+    const mt=document.querySelector("#mod-table tbody");mt.innerHTML="";
+    const maxReq=j.modules_usage[0]?j.modules_usage[0].requests:1;
+    j.modules_usage.forEach(m=>{const tr=mt.insertRow();tr.innerHTML="<td>"+m.name+"</td><td style=\"min-width:80px\">"+m.requests+"<div class=\"rank-bar\" style=\"width:"+(m.requests/maxReq*100).toFixed(0)+"%\"></div></td>"});
+
+    const et=document.querySelector("#ep-table tbody");et.innerHTML="";
+    j.top_endpoints.forEach(e=>{const tr=et.insertRow();tr.innerHTML="<td style=\"font-size:.78rem\">"+e.path+"</td><td>"+e.hits+"</td>"});
+
+    const dbt=document.querySelector("#db-table tbody");dbt.innerHTML="";
+    j.dbs.forEach(d=>{const tr=dbt.insertRow();tr.innerHTML="<td style=\"font-size:.78rem\">"+d.path+"</td><td>"+fmtKB(d.size_kb)+"</td>"});
+
+    document.getElementById("log-size").textContent=fmtKB(j.log_size_kb);
+    document.getElementById("last-access").textContent=j.last_access;
+    document.getElementById("ts").textContent="Última: "+j.generated_at;
+  }catch(e){document.getElementById("ts").textContent="Error de conexión";}
+}
+refresh();setInterval(refresh,10000);
+</script>
+</body>
+</html>
