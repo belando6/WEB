@@ -31,6 +31,22 @@ Proyecto web en `/var/www/html/WEB`, sincronizado con GitHub.
     # Para actualizar desde remoto:
     git pull origin main
 
+## Borrar todo y sincronizar exactamente con GitHub
+    
+ 1. Descarga la información más reciente de GitHub
+git fetch origin
+
+ 2. Fuerza tu rama local a coincidir exactamente con GitHub
+git reset --hard origin/main
+
+ 3. Elimina archivos y carpetas nuevos que no estén en el repositorio
+git clean -fd
+
+## Iniciar IA
+cd /var/www/html/WEB/documentos/
+./pcmain.py -y
+./pcmain.py -y --verbose --session correciones6
+
 ## Notas
 - El token personal se almacena en ~/.git-credentials (solo lectura del owner).
 - Si se rota el token, editar ese archivo o re-ejecutar:
