@@ -75,19 +75,4 @@ if ($action === 'delete_message') {
     echo json_encode(['ok'=>true]); exit;
 }
 
-if ($action === 'search_messages') {
-    $q = trim($_POST['q'] ?? '');
-    if (mb_strlen($q) < 2) { echo json_encode(['ok'=>true,'results'=>[],'total'=>0,'error'=>'Escribe al menos 2 caracteres']); exit; }
-    $like = '%'.$q.'%';
-    $stmt = $DB->prepare("SELECT m.session_id, s.name, m.id, m.type, m.content, m.filename, m.created_at
-                          FROM messages m JOIN sessions s ON s.id=m.session_id
-                          WHERE m.content LIKE ? OR m.filename LIKE ?
-                          ORDER BY m.created_at DESC LIMIT 100");
-    $stmt->execute([$like,$like]);
-    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    $total = $DB->prepare("SELECT COUNT(*) FROM messages WHERE content LIKE ? OR filename LIKE ?");
-    $total->execute([$like,$like]);
-    echo json_encode(['ok'=>true,'results'=>$rows,'total'=>(int)$total->fetchColumn()]); exit;
-}
-
 echo json_encode(['ok'=>false,'error'=>'Acción no válida']);
