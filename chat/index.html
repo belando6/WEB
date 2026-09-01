@@ -78,7 +78,11 @@ textarea.msg-input:focus{border-color:var(--accent)}
 .modal-actions{display:flex;gap:.6rem;justify-content:flex-end}
 .btn-cancel{padding:.6rem 1.2rem;border-radius:8px;border:none;background:rgba(255,255,255,.08);color:var(--muted);font-weight:600;cursor:pointer}
 .btn-confirm{padding:.6rem 1.2rem;border-radius:8px;border:none;font-weight:600;cursor:pointer;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
-@media(max-width:768px){.sidebar{width:100%;max-height:180px}.app{flex-direction:column;height:auto;overflow-y:auto}.messages-container{padding:1rem}.msg{max-width:95%}}
+.chat-header{display:none;align-items:center;gap:.7rem;padding:.65rem 1rem;border-bottom:1px solid var(--border);background:linear-gradient(135deg,rgba(124,58,237,.18),rgba(6,182,212,.12))}
+.ch-back{border:none;background:rgba(255,255,255,.08);color:#fff;border-radius:8px;padding:.4rem .7rem;font-size:.85rem;cursor:pointer}
+.ch-name{font-weight:700;font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ch-badge{margin-left:auto;font-size:.65rem;color:var(--muted);background:rgba(255,255,255,.06);padding:.25rem .6rem;border-radius:20px;white-space:nowrap}
+@media(max-width:768px){.sidebar{width:100%;max-height:200px;border-bottom:2px solid var(--accent);background:rgba(10,10,26,.95)}.chat-header{display:flex}.app.mobile-chat .sidebar{display:none}.app{flex-direction:column;height:auto;overflow-y:auto}.messages-container{padding:1rem;min-height:55vh}.msg{max-width:95%}.input-area{position:sticky;bottom:0}}
 </style>
 </head>
 <body>
@@ -104,6 +108,11 @@ textarea.msg-input:focus{border-color:var(--accent)}
   </aside>
 
   <main class="chat-area">
+    <div class="chat-header" id="chatHeader">
+      <button class="ch-back" onclick="closeSessionMobile()">← Sesiones</button>
+      <span class="ch-name" id="chatHeaderName"></span>
+      <span class="ch-badge" id="chatHeaderBadge"></span>
+    </div>
     <div class="messages-container" id="messagesContainer">
       <div class="empty-state"><div><div class="e-icon">💬</div>Selecciona o crea una sesión para empezar.<br>Pega texto directamente desde tu portapapeles.</div></div>
     </div>
@@ -198,7 +207,7 @@ async function loadSessions(){
   document.getElementById('sessionList').innerHTML=d.sessions.map(s=>{
     const active = currentSession===s.id ? 'active' : '';
     const initial = (s.name[0]||'?').toUpperCase();
-    return '<div class="session-item '+active+'" onclick="selectSession('+s.id+')">' +
+    return '<div class="session-item '+active+'" data-sid="'+s.id+'" onclick="selectSession('+s.id+')">' +
       '<div class="s-icon">'+initial+'</div>' +
       '<div class="s-info"><div class="s-name">'+esc(s.name)+'</div><div class="s-meta">'+(s.msg_count||0)+' msg · '+(s.created_at?s.created_at.slice(5,16):'')+'</div></div>' +
       '<button class="s-del" onclick="event.stopPropagation();deleteSession('+s.id+')">✕</button></div>';
@@ -210,6 +219,18 @@ function selectSession(id){
   document.getElementById('inputArea').style.display='block';
   loadSessions();
   loadMessages2();
+  const nm=document.querySelector('.session-item[data-sid="'+id+'"] .s-name');
+  const mc=document.querySelector('.session-item[data-sid="'+id+'"] .s-meta');
+  if(nm)document.getElementById('chatHeaderName').textContent=nm.textContent;
+  if(mc)document.getElementById('chatHeaderBadge').textContent=mc.textContent;
+  document.querySelector('.app').classList.add('mobile-chat');
+}
+function closeSessionMobile(){
+  currentSession=null;
+  document.querySelector('.app').classList.remove('mobile-chat');
+  document.getElementById('inputArea').style.display='none';
+  document.getElementById('messagesContainer').innerHTML='<div class="empty-state"><div><div class="e-icon">💬</div>Selecciona o crea una sesión para empezar.<br>Pega texto directamente desde tu portapapeles.</div></div>';
+  loadSessions();
 }
 
 async function loadMessages2(){
@@ -268,7 +289,7 @@ function focusAndHint(inp){
 }
 
 async function deleteMsg(id){await api('delete_message',{message_id:id});loadMessages2();loadSessions();}
-async function deleteSession(id){if(!confirm('¿Eliminar sesión y todos sus mensajes?'))return;await api('delete_session',{id});currentSession=null;document.getElementById('inputArea').style.display='none';loadSessions();}
+async function deleteSession(id){if(!confirm('¿Eliminar sesión y todos sus mensajes?'))return;await api('delete_session',{id});if(currentSession===id)closeSessionMobile();else{currentSession=null;document.getElementById('inputArea').style.display='none';}loadSessions();}
 
 function openNewSession(){document.getElementById('newSessionModal').style.display='flex';document.getElementById('sessionNameInput').focus();}
 function closeModal(){document.getElementById('newSessionModal').style.display='none';}
